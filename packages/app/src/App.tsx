@@ -36,6 +36,14 @@ import { AppRouter, FlatRoutes } from '@backstage/core-app-api';
 import { CatalogGraphPage } from '@backstage/plugin-catalog-graph';
 import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
+import { createTheme, ThemeProvider } from '@material-ui/core';
+import { PlaygroundPage } from './components/playground/PlaygroundPage';
+
+const darkTheme = createTheme({
+  palette: {
+    type: 'dark',
+  },
+});
 
 const app = createApp({
   apis,
@@ -95,6 +103,7 @@ const routes = (
     </Route>
     <Route path="/settings" element={<UserSettingsPage />} />
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
+    <Route path="/playground" element={<PlaygroundPage />} />
   </FlatRoutes>
 );
 
