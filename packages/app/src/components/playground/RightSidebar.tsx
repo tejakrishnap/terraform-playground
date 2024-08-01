@@ -1,5 +1,11 @@
+import { Divider } from '@material-ui/core';
 import React from 'react';
 
 export const RightSidebar = () => {
-  return <div>Right Sidebar Content</div>;
+  return (
+    <>
+      <h2 style={{ marginLeft: '8px', textAlign: 'center' }}>Item Properties</h2>
+      <Divider />
+    </>
+  );
 };

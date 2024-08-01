@@ -18,8 +18,9 @@ const useStyles = makeStyles(theme => ({
   },
   canvas: {
     flex: 1,
-    backgroundColor: theme.palette.background.default,
-    border: '1px solid #ccc',
+    backgroundColor: '#fff',
+    borderLeft: '1px solid #ccc',
+    borderRight: '1px solid #ccc',
   },
 }));
 
