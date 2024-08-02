@@ -1,5 +1,4 @@
 import { Box, Divider } from '@material-ui/core';
-
 import React from 'react';
 import { useDrag } from 'react-dnd';
 import { ReactSVG } from 'react-svg';
@@ -27,8 +26,8 @@ const ToolItem = ({ name, children }) => {
 export const LeftSidebar = () => {
   return (
     <>
-    <h2 style={{marginLeft: "8px", textAlign: 'center'}}>Toolbar</h2>
-    <Divider/>
+    <h2 style={{marginLeft: "8px", textAlign: 'center', color: '#fff'}}>Toolbar</h2>
+    <Divider style={{backgroundColor: '#43E8B0'}}/>
     <Box sx={{ display: 'flex', gridGap: "8px", flexWrap: 'wrap', mt: "8px" }}>
       <ToolItem name="ECS">
         <ReactSVG src={`icons/Ecs.svg`} style={{width: "48px", height: "48px"}}/>

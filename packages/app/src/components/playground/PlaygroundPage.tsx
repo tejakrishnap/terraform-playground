@@ -10,17 +10,17 @@ const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
     height: '100vh',
-    backgroundColor: theme.palette.background.default,
+    backgroundColor: '#1E1E1E',
   },
   sidebar: {
     width: 250,
-    backgroundColor: theme.palette.background.paper,
+    backgroundColor: '#1E1E1E',
   },
   canvas: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderLeft: '1px solid #ccc',
-    borderRight: '1px solid #ccc',
+    backgroundColor: '#1E1E1E',
+    borderLeft: '1px solid #43E8B0',
+    borderRight: '1px solid #43E8B0',
   },
 }));
 
