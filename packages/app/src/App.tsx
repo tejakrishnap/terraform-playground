@@ -38,6 +38,8 @@ import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
 import { createTheme, ThemeProvider } from '@material-ui/core';
 import { PlaygroundPage } from './components/playground/PlaygroundPage';
+import { CreatePlaygroundPage } from './components/playground/CreatePlayground';
+import ExistingPlayground from './components/playground/ExistingPlaygrounds';
 
 const darkTheme = createTheme({
   palette: {
@@ -103,7 +105,9 @@ const routes = (
     </Route>
     <Route path="/settings" element={<UserSettingsPage />} />
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
+    <Route path="/create-playground" element={<CreatePlaygroundPage />} />
     <Route path="/playground" element={<PlaygroundPage />} />
+    <Route path="/exisiting-playgrounds" element={<ExistingPlayground />} />
   </FlatRoutes>
 );
 

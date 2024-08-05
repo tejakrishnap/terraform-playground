@@ -1,47 +1,60 @@
-import { Box, Divider } from '@material-ui/core';
 import React from 'react';
-import { useDrag } from 'react-dnd';
+import { Box, Divider } from '@material-ui/core';
 import { ReactSVG } from 'react-svg';
+import { useDrag } from 'react-dnd';
 
 const ItemType = {
   TOOL: 'tool',
 };
 
-const ToolItem = ({ name, children }) => {
+interface ToolItemProps {
+  id: string;
+  name: string;
+  svgSrc: string;
+}
+
+const ToolItem: React.FC<ToolItemProps>  = ({ id, name, svgSrc }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ItemType.TOOL,
-    item: { name },
+    item: { id, name },
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
   }));
 
   return (
-    <div ref={drag} style={{width: "fit-content", opacity: isDragging ? 0.5 : 1, padding: '8px', margin: '4px'}}>
-      {children}
+    <div style={{width: "fit-content", color: 'whitesmoke', display: 'flex', flexDirection: 'column', alignItems: 'center',  opacity: isDragging ? 0.5 : 1, padding: '8px', margin: '4px'}} ref={drag}>
+      <ReactSVG src={svgSrc} style={{width: "48px", height: "48px"}} />
+      {name}
     </div>
   );
 };
 
+const ResourcePalette = ({ resources }) => {
+  return (
+    <Box sx={{ display: 'flex', gridGap: "8px", flexWrap: 'wrap', mt: "8px" }}>
+      {resources.map((resource) => (
+        <ToolItem key={resource.id} id={resource.id} name={resource.name} svgSrc={resource.svgSrc} />
+      ))}
+    </Box>
+  );
+};
+
 export const LeftSidebar = () => {
+  const resources = [
+    { id: '1', name: 'ECS', svgSrc: 'icons/Ecs.svg' },
+    { id: '2', name: 'Lambda', svgSrc: 'icons/Lambda.svg' },
+    { id: '3', name: 'RDS', svgSrc: 'icons/Rds.svg' },
+    { id: '4', name: 'Redshift', svgSrc: 'icons/Redshift.svg' },
+  ];
+
   return (
     <>
-    <h2 style={{marginLeft: "8px", textAlign: 'center', color: '#fff'}}>Toolbar</h2>
-    <Divider style={{backgroundColor: '#43E8B0'}}/>
-    <Box sx={{ display: 'flex', gridGap: "8px", flexWrap: 'wrap', mt: "8px" }}>
-      <ToolItem name="ECS">
-        <ReactSVG src={`icons/Ecs.svg`} style={{width: "48px", height: "48px"}}/>
-      </ToolItem>
-      <ToolItem name="Lambda">
-        <ReactSVG src={`icons/Lambda.svg`} style={{width: "48px", height: "48px"}}/>
-      </ToolItem>
-      <ToolItem name="RDS">
-        <ReactSVG src={`icons/Rds.svg`} style={{width: "48px", height: "48px"}}/>
-      </ToolItem>
-      <ToolItem name="Redshift">
-        <ReactSVG src={`icons/Redshift.svg`} style={{width: "48px", height: "48px"}}/>
-      </ToolItem>
-    </Box>
+      <h2 style={{ marginLeft: '8px', textAlign: 'center', color: '#fff' }}>Toolbar</h2>
+      <Divider style={{ backgroundColor: '#43E8B0' }} />
+        <ResourcePalette resources={resources} />
     </>
   );
 };
+
+export default LeftSidebar;

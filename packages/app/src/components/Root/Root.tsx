@@ -28,7 +28,6 @@ import SearchIcon from '@material-ui/icons/Search';
 import { MyGroupsSidebarItem } from '@backstage/plugin-org';
 import GroupIcon from '@material-ui/icons/People';
 import SportsEsportsIcon from '@material-ui/icons/SportsEsports';
-import { PlaygroundPage } from '../playground/PlaygroundPage';
 
 const useSidebarLogoStyles = makeStyles({
   root: {
@@ -77,7 +76,7 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
         <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
         <SidebarItem icon={LibraryBooks} to="docs" text="Docs" />
         <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
-        <SidebarItem icon={SportsEsportsIcon} to="playground" text="Playground" />
+        <SidebarItem icon={SportsEsportsIcon} to="create-playground" text="Playground" />
         {/* End global nav */}
         <SidebarDivider />
         <SidebarScrollWrapper>

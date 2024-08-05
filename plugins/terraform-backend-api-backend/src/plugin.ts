@@ -37,6 +37,14 @@ export const terraformBackendApiPlugin = createBackendPlugin({
           path: '/save-terraform',
           allow: 'unauthenticated',
         });
+        httpRouter.addAuthPolicy({
+          path: '/save-playground',
+          allow: 'unauthenticated',
+        });
+        httpRouter.addAuthPolicy({
+          path: '/playground',
+          allow: 'unauthenticated',
+        });
       },
     });
   },
