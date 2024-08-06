@@ -4,7 +4,7 @@ import React from 'react';
 export const RightSidebar = () => {
   return (
     <>
-      <h2 style={{ marginLeft: '8px', textAlign: 'center', color: '#fff', }}>Item Properties</h2>
+      <h2 style={{ marginLeft: '8px', textAlign: 'center', color: '#fff', }}>Generated Code</h2>
       <Divider style={{backgroundColor: '#43E8B0'}}/>
     </>
   );
