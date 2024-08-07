@@ -22,8 +22,8 @@ const useStyles = makeStyles(theme => ({
   canvas: {
     flex: 1,
     backgroundColor: '#1E1E1E',
-    borderLeft: '1px solid #43E8B0',
-    borderRight: '1px solid #43E8B0',
+    borderLeft: '1px solid #ffc107',
+    borderRight: '1px solid #ffc107',
   },
 }));
 
@@ -99,7 +99,7 @@ export const PlaygroundPage = () => {
             >
               {playgroundName}
             </h2>
-            <Divider style={{ backgroundColor: '#43E8B0' }} />
+            <Divider style={{ backgroundColor: '#ffc107' }} />
             <Canvas items={items} setItems={setItems} />
           </div>
           <div className={classes.sidebar}>

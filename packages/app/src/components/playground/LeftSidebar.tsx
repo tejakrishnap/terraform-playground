@@ -51,7 +51,7 @@ export const LeftSidebar = () => {
   return (
     <>
       <h2 style={{ marginLeft: '8px', textAlign: 'center', color: '#fff' }}>Toolbar</h2>
-      <Divider style={{ backgroundColor: '#43E8B0' }} />
+      <Divider style={{ backgroundColor: '#ffc107' }} />
         <ResourcePalette resources={resources} />
     </>
   );
