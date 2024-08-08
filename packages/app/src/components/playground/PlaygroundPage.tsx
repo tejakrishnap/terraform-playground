@@ -8,6 +8,8 @@ import { Canvas } from './Canvas';
 import { RightSidebar } from './RightSidebar';
 import { Box, Button, Container, Divider, Drawer } from '@material-ui/core';
 import { CopyToClipboardButton } from './CopyToClipboard';
+import axios from 'axios';
+import { configApiRef, useApi } from '@backstage/core-plugin-api';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -30,6 +32,8 @@ const useStyles = makeStyles(theme => ({
 export const PlaygroundPage = () => {
   const classes = useStyles();
   const location = useLocation();
+  const configApi = useApi(configApiRef);
+  const backendBaseUrl = configApi.getString('backend.baseUrl');
   const [items, setItems] = useState([]);
   const [playgroundData, setPlaygroundData] = useState({
     webhook: '',
@@ -45,30 +49,36 @@ export const PlaygroundPage = () => {
     setPlaygroundName(name);
 
     if (name) {
-      const storedPlayground = JSON.parse(
-        localStorage.getItem(`playground-${name}`),
-      );
-      if (storedPlayground) {
-        setItems(storedPlayground.items);
-        setPlaygroundData({
-          webhook: storedPlayground.webhook,
-          backend: storedPlayground.backend,
-          accessKey: storedPlayground.accessKey,
+      axios
+        .get(`${backendBaseUrl}/api/terraform-backend-api/get-playground-data`, {
+          params: { name },
+        })
+        .then(response => {
+          const { items, webhook, backend, accessKey } = response.data;
+          setItems(items);
+          setPlaygroundData({ webhook, backend, accessKey });
+        })
+        .catch(error => {
+          console.error('Error fetching playground data:', error);
         });
-      }
     }
-  }, [location]);
+  }, [location, backendBaseUrl]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (playgroundName) {
-      localStorage.setItem(
-        `playground-${playgroundName}`,
-        JSON.stringify({
-          ...playgroundData,
+      try {
+        await axios.post(`${backendBaseUrl}/api/terraform-backend-api/save-playground`, {
+          name: playgroundName,
           items,
-        }),
-      );
-      alert('Playground saved successfully');
+          webhook: playgroundData.webhook,
+          backend: playgroundData.backend,
+          accessKey: playgroundData.accessKey,
+        });
+        alert('Playground saved successfully');
+      } catch (error) {
+        console.error('Error saving playground:', error);
+        alert('Failed to save playground');
+      }
     }
   };
 
@@ -119,7 +129,7 @@ export const PlaygroundPage = () => {
       </DndProvider>
 
       <Drawer anchor={'bottom'} open={drawerOpen} onClose={toggleDrawer}>
-        <Container style={{maxWidth: '800px', padding: '10px 0 10px 0'}}>
+        <Container style={{ maxWidth: '800px', padding: '10px 0 10px 0' }}>
           <CopyToClipboardButton label="Webhook" textToCopy={playgroundData.webhook} />
           <CopyToClipboardButton label="Backend" textToCopy={playgroundData.backend} />
           <CopyToClipboardButton label="Access Key" textToCopy={playgroundData.accessKey} />

@@ -33,13 +33,10 @@ export async function createRouter(
   const router = Router();
   router.use(express.json());
 
-  const middleware = MiddlewareFactory.create({ logger, config });
-
-  router.use(middleware.error());
-
   // Create a new playground
-  router.post('/playgrounds', async (req, res) => {
+  router.post('/create-playground', async (req, res) => {
     const { name, items, webhook, backend, accessKey } = req.body;
+
     try {
       await dbClient('playground').insert({
         name,
@@ -48,46 +45,42 @@ export async function createRouter(
         backend,
         access_key: accessKey,
       });
-      res.status(201).send('Playground created');
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to create playground' });
+
+      res.status(201).json({ message: 'Playground created successfully' });
+    } catch (error: any) {
+      logger.error('Error creating playground:', error);
+      res.status(500).json({ message: 'Failed to create playground' });
     }
   });
 
-  // Get all playgrounds
-  router.get('/playgrounds', async (req, res) => {
-    try {
-      const playgrounds = await dbClient('playground').select('*');
-      const formattedPlaygrounds = playgrounds.map(pg => ({
-        ...pg,
-        items: JSON.parse(pg.items),
-      }));
-      res.status(200).json(formattedPlaygrounds);
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch playgrounds' });
-    }
-  });
+  router.get('/get-playground-data', async (req, res) => {
+    const { name } = req.query;
 
-  // Get a single playground by name
-  router.get('/playgrounds/:name', async (req, res) => {
-    const { name } = req.params;
     try {
       const playground = await dbClient('playground').where({ name }).first();
+
       if (!playground) {
-        return res.status(404).json({ error: 'Playground not found' });
+        return res.status(404).json({ message: 'Playground not found' });
       }
-      res.status(200).json({ ...playground, items: JSON.parse(playground.items) });
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to fetch playground' });
+
+      res.status(200).json({
+        name: playground.name,
+        items: JSON.parse(playground.items),
+        webhook: playground.webhook,
+        backend: playground.backend,
+        accessKey: playground.access_key,
+      });
+    } catch (error: any) {
+      logger.error('Error fetching playground data:', error);
+      res.status(500).json({ message: 'Failed to fetch playground data' });
     }
   });
 
-  // Update a playground
-  router.put('/playgrounds/:name', async (req, res) => {
-    const { name } = req.params;
-    const { items, webhook, backend, accessKey } = req.body;
+  router.post('/save-playground', async (req, res) => {
+    const { name, items, webhook, backend, accessKey } = req.body;
+
     try {
-      const updated = await dbClient('playground')
+      await dbClient('playground')
         .where({ name })
         .update({
           items: JSON.stringify(items),
@@ -95,28 +88,26 @@ export async function createRouter(
           backend,
           access_key: accessKey,
         });
-      if (!updated) {
-        return res.status(404).json({ error: 'Playground not found' });
-      }
-      res.status(200).send('Playground updated');
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to update playground' });
+
+      res.status(200).json({ message: 'Playground saved successfully' });
+    } catch (error: any) {
+      logger.error('Error saving playground:', error);
+      res.status(500).json({ message: 'Failed to save playground' });
     }
   });
 
-  // Delete a playground
-  router.delete('/playgrounds/:name', async (req, res) => {
-    const { name } = req.params;
+  router.get('/get-playgrounds', async (req, res) => {
     try {
-      const deleted = await dbClient('playground').where({ name }).del();
-      if (!deleted) {
-        return res.status(404).json({ error: 'Playground not found' });
-      }
-      res.status(200).send('Playground deleted');
-    } catch (error) {
-      res.status(500).json({ error: 'Failed to delete playground' });
+      const playgrounds = await dbClient('playground').select('name');
+      res.status(200).json(playgrounds);
+    } catch (error: any) {
+      logger.error('Error fetching playgrounds:', error);
+      res.status(500).json({ message: 'Failed to fetch playgrounds' });
     }
   });
+
+  const middleware = MiddlewareFactory.create({ logger, config });
+  router.use(middleware.error());
 
   return router;
 }

@@ -107,7 +107,7 @@ const routes = (
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
     <Route path="/create-playground" element={<CreatePlaygroundPage />} />
     <Route path="/playground" element={<PlaygroundPage />} />
-    <Route path="/exisiting-playgrounds" element={<ExistingPlayground />} />
+    <Route path="/existing-playgrounds" element={<ExistingPlayground />} />
   </FlatRoutes>
 );
 

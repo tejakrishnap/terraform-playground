@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TextField, Button, Container, Typography } from '@material-ui/core';
+import axios from 'axios';
+import { configApiRef, useApi } from '@backstage/core-plugin-api';
 
 export const CreatePlaygroundPage = () => {
   const [playgroundName, setPlaygroundName] = useState('');
   const [webhook, setWebhook] = useState('');
   const [backend, setBackend] = useState('');
   const [accessKey, setAccessKey] = useState('');
+  const configApi = useApi(configApiRef);
+  const backendBaseUrl = configApi.getString('backend.baseUrl');
   const navigate = useNavigate();
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!playgroundName) {
       alert('Playground Name is required');
       return;
@@ -23,13 +27,17 @@ export const CreatePlaygroundPage = () => {
       accessKey
     };
 
-    localStorage.setItem(`playground-${playgroundName}`, JSON.stringify(newPlayground));
-
-    navigate(`/playground?name=${encodeURIComponent(playgroundName)}`);
+    try {
+      await axios.post(`${backendBaseUrl}/api/terraform-backend-api/create-playground`, newPlayground);
+      navigate(`/playground?name=${encodeURIComponent(playgroundName)}`);
+    } catch (error) {
+      console.error('Error creating playground:', error);
+      alert('Failed to create playground');
+    }
   };
 
   const handleExistingPlaygrounds = () => {
-    navigate('/exisiting-playgrounds');
+    navigate('/existing-playgrounds');
   };
 
   return (
