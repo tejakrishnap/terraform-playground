@@ -39,21 +39,40 @@ export const CopyToClipboardButton: React.FC<CopyToClipboardButtonProps> = ({
 
   return (
     <>
-    {label && <Typography variant="h6" gutterBottom>{label}</Typography>}
-    <Box sx={{display: 'flex', alignItems: 'center', my: 2, pl: 4, py: 1, backgroundColor: '#e1e4e8', justifyContent: 'space-between', borderRadius: 8}}>
-      <Typography variant="subtitle1" gutterBottom>{textToCopy}</Typography>
-      <CopyToClipboard text={textToCopy} onCopy={handleCopy}>
-        <Tooltip title={copied ? 'Copied!' : 'Copy to clipboard'} arrow>
-          <Button className={classes.button}>
-            {copied ? (
-              <CheckIcon className={`${classes.icon} ${classes.copiedIcon}`} />
-            ) : (
-              <ContentCopyIcon className={classes.icon} />
-            )}
-          </Button>
-        </Tooltip>
-      </CopyToClipboard>
-    </Box>
+      {label && (
+        <Typography variant="h6" gutterBottom>
+          {label}
+        </Typography>
+      )}
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          my: 2,
+          pl: 4,
+          py: 1,
+          backgroundColor: '#e1e4e8',
+          justifyContent: 'space-between',
+          borderRadius: 8,
+        }}
+      >
+        <Typography variant="subtitle1" gutterBottom>
+          {textToCopy}
+        </Typography>
+        <CopyToClipboard text={textToCopy} onCopy={handleCopy}>
+          <Tooltip title={copied ? 'Copied!' : 'Copy to clipboard'} arrow>
+            <Button className={classes.button}>
+              {copied ? (
+                <CheckIcon
+                  className={`${classes.icon} ${classes.copiedIcon}`}
+                />
+              ) : (
+                <ContentCopyIcon className={classes.icon} />
+              )}
+            </Button>
+          </Tooltip>
+        </CopyToClipboard>
+      </Box>
     </>
   );
 };

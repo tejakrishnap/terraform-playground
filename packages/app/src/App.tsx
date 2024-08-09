@@ -25,7 +25,7 @@ import { apis } from './apis';
 import { entityPage } from './components/catalog/EntityPage';
 import { searchPage } from './components/search/SearchPage';
 import { Root } from './components/Root';
-
+import './App.css';
 import {
   AlertDisplay,
   OAuthRequestDialog,
@@ -40,12 +40,6 @@ import { createTheme, ThemeProvider } from '@material-ui/core';
 import { PlaygroundPage } from './components/playground/PlaygroundPage';
 import { CreatePlaygroundPage } from './components/playground/CreatePlayground';
 import ExistingPlayground from './components/playground/ExistingPlaygrounds';
-
-const darkTheme = createTheme({
-  palette: {
-    type: 'dark',
-  },
-});
 
 const app = createApp({
   apis,

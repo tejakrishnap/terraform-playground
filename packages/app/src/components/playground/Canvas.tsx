@@ -4,6 +4,7 @@ import { ReactSVG } from 'react-svg';
 import { terraformTemplates } from '../../terraformTemplates';
 import HighlightOffIcon from '@material-ui/icons/HighlightOffSharp';
 import { Box, Button, Modal, TextField } from '@material-ui/core';
+import { theme } from '../Root/Root';
 
 const ItemType = {
   TOOL: 'tool',
@@ -112,7 +113,7 @@ export const Canvas = ({ items, setItems }) => {
         position: 'relative',
         width: '100%',
         height: '100%',
-        backgroundColor: '#1E1E1E',
+        backgroundColor: theme.palette.primary.main,
       }}
     >
       {items.map((item, index) => (
@@ -172,7 +173,7 @@ export const Canvas = ({ items, setItems }) => {
                 margin="normal"
               />
             ))}
-          <Box sx={{display: 'flex', justifyContent: 'center', mt: 4}}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <Button
               variant="contained"
               color="primary"

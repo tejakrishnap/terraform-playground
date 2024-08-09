@@ -1,7 +1,8 @@
 import React from 'react';
-import { Box, Divider } from '@material-ui/core';
+import { Box, Divider, Paper } from '@material-ui/core';
 import { ReactSVG } from 'react-svg';
 import { useDrag } from 'react-dnd';
+import { theme } from '../Root/Root';
 
 const ItemType = {
   TOOL: 'tool',
@@ -13,18 +14,32 @@ interface ToolItemProps {
   svgSrc: string;
 }
 
-const ToolItem: React.FC<ToolItemProps>  = ({ id, name, svgSrc }) => {
+const ToolItem: React.FC<ToolItemProps> = ({ id, name, svgSrc }) => {
   const [{ isDragging }, drag] = useDrag(() => ({
     type: ItemType.TOOL,
     item: { id, name },
-    collect: (monitor) => ({
+    collect: monitor => ({
       isDragging: !!monitor.isDragging(),
     }),
   }));
 
   return (
-    <div style={{width: "fit-content", color: 'whitesmoke', display: 'flex', flexDirection: 'column', alignItems: 'center',  opacity: isDragging ? 0.5 : 1, padding: '8px', margin: '4px'}} ref={drag}>
-      <ReactSVG src={svgSrc} style={{width: "48px", height: "48px"}} />
+    <div
+      style={{
+        width: 'fit-content',
+        color: theme.palette.greentheme.offwhite,
+        display: 'flex',
+        flexDirection: 'column',
+        fontSize: 12,
+        fontWeight: 700,
+        alignItems: 'center',
+        opacity: isDragging ? 0.5 : 1,
+        padding: '8px',
+        margin: '4px',
+      }}
+      ref={drag}
+    >
+      <ReactSVG src={svgSrc} style={{ width: '48px', height: '48px' }} />
       {name}
     </div>
   );
@@ -32,11 +47,45 @@ const ToolItem: React.FC<ToolItemProps>  = ({ id, name, svgSrc }) => {
 
 const ResourcePalette = ({ resources }) => {
   return (
-    <Box sx={{ display: 'flex', gridGap: "8px", flexWrap: 'wrap', mt: "8px" }}>
-      {resources.map((resource) => (
-        <ToolItem key={resource.id} id={resource.id} name={resource.name} svgSrc={resource.svgSrc} />
-      ))}
-    </Box>
+    <Paper
+      elevation={3}
+      style={{
+        marginLeft: '10px',
+        backgroundColor: theme.palette.greentheme.green,
+        borderRadius: 8,
+        height: '100vh',
+      }}
+    >
+      <h2
+        style={{
+          paddingTop: '8px',
+          marginLeft: '8px',
+          textAlign: 'center',
+          color: theme.palette.greentheme.offwhite,
+        }}
+      >
+        Toolbar
+      </h2>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          gridGap: '8px',
+          flexWrap: 'wrap',
+          mt: '8px',
+          mx: '10px',
+        }}
+      >
+        {resources.map(resource => (
+          <ToolItem
+            key={resource.id}
+            id={resource.id}
+            name={resource.name}
+            svgSrc={resource.svgSrc}
+          />
+        ))}
+      </Box>
+    </Paper>
   );
 };
 
@@ -50,9 +99,8 @@ export const LeftSidebar = () => {
 
   return (
     <>
-      <h2 style={{ marginLeft: '8px', textAlign: 'center', color: '#fff' }}>Toolbar</h2>
-      <Divider style={{ backgroundColor: '#ffc107' }} />
-        <ResourcePalette resources={resources} />
+      {/* <Divider style={{ backgroundColor: theme.palette.orangePeel.main }} /> */}
+      <ResourcePalette resources={resources} />
     </>
   );
 };

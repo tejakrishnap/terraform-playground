@@ -6,26 +6,35 @@ import { makeStyles } from '@material-ui/core/styles';
 import { LeftSidebar } from './LeftSidebar';
 import { Canvas } from './Canvas';
 import { RightSidebar } from './RightSidebar';
-import { Box, Button, Container, Divider, Drawer } from '@material-ui/core';
+import {
+  Box,
+  Button,
+  Chip,
+  Container,
+  Divider,
+  Drawer,
+} from '@material-ui/core';
 import { CopyToClipboardButton } from './CopyToClipboard';
 import axios from 'axios';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
+import { theme } from '../Root/Root';
+import { RoundedButton } from './CreatePlayground';
+import EditIcon from '@mui/icons-material/Edit';
 
 const useStyles = makeStyles(theme => ({
   root: {
     display: 'flex',
     height: '100vh',
-    backgroundColor: '#1E1E1E',
+    backgroundColor: theme.palette.primary.main,
   },
   sidebar: {
-    width: 250,
-    backgroundColor: '#1E1E1E',
+    width: 300,
+    backgroundColor: theme.palette.primary.main,
   },
   canvas: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
-    borderLeft: '1px solid #ffc107',
-    borderRight: '1px solid #ffc107',
+    backgroundColor: theme.palette.primary.main,
+    // borderLeft: `1px solid ${theme.palette.orangePeel.main}`,
   },
 }));
 
@@ -50,9 +59,12 @@ export const PlaygroundPage = () => {
 
     if (name) {
       axios
-        .get(`${backendBaseUrl}/api/terraform-backend-api/get-playground-data`, {
-          params: { name },
-        })
+        .get(
+          `${backendBaseUrl}/api/terraform-backend-api/get-playground-data`,
+          {
+            params: { name },
+          },
+        )
         .then(response => {
           const { items, webhook, backend, accessKey } = response.data;
           setItems(items);
@@ -67,13 +79,16 @@ export const PlaygroundPage = () => {
   const handleSave = async () => {
     if (playgroundName) {
       try {
-        await axios.post(`${backendBaseUrl}/api/terraform-backend-api/save-playground`, {
-          name: playgroundName,
-          items,
-          webhook: playgroundData.webhook,
-          backend: playgroundData.backend,
-          accessKey: playgroundData.accessKey,
-        });
+        await axios.post(
+          `${backendBaseUrl}/api/terraform-backend-api/save-playground`,
+          {
+            name: playgroundName,
+            items,
+            webhook: playgroundData.webhook,
+            backend: playgroundData.backend,
+            accessKey: playgroundData.accessKey,
+          },
+        );
         alert('Playground saved successfully');
       } catch (error) {
         console.error('Error saving playground:', error);
@@ -104,35 +119,79 @@ export const PlaygroundPage = () => {
             <LeftSidebar />
           </div>
           <div className={classes.canvas}>
-            <h2
-              style={{ marginLeft: '8px', textAlign: 'center', color: '#fff' }}
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                mt: 2,
+                gap: 4,
+              }}
             >
-              {playgroundName}
-            </h2>
-            <Divider style={{ backgroundColor: '#ffc107' }} />
+              <EditIcon
+                sx={{ color: theme.palette.greentheme.green, fontSize: 20 }}
+              />
+              <Box
+                sx={{
+                  color: theme.palette.greentheme.green,
+                  fontSize: 16,
+                  fontWeight: 700,
+                  textTransform: 'capitalize',
+                }}
+              >
+                {playgroundName} playground
+              </Box>
+            </Box>
+            {/* <h2
+              style={{ marginLeft: '8px', textAlign: 'center', color: theme.palette.greentheme.green, }}
+            >
+              // {playgroundName} playground
+            </h2> */}
+            {/* <Divider style={{ backgroundColor: theme.palette.orangePeel.main }} /> */}
             <Canvas items={items} setItems={setItems} />
           </div>
-          <div className={classes.sidebar}>
+          {/* <div className={classes.sidebar}>
             <RightSidebar />
-          </div>
+          </div> */}
           <Box position="fixed" bottom={72} right={16}>
-            <Button color="secondary" onClick={toggleDrawer}>
+            <RoundedButton
+              variant="contained"
+              color="secondary"
+              onClick={toggleDrawer}
+            >
               Playground data
-            </Button>
+            </RoundedButton>
           </Box>
           <Box position="fixed" bottom={16} right={16}>
-            <Button variant="contained" color="primary" onClick={handleSave}>
+            <RoundedButton
+              variant="contained"
+              color="primary"
+              onClick={handleSave}
+              style={{
+                backgroundColor: `${theme.palette.greentheme.yellow}`,
+                color: `${theme.palette.greentheme.green}`,
+              }}
+            >
               Save Playground
-            </Button>
+            </RoundedButton>
           </Box>
         </div>
       </DndProvider>
 
       <Drawer anchor={'bottom'} open={drawerOpen} onClose={toggleDrawer}>
         <Container style={{ maxWidth: '800px', padding: '10px 0 10px 0' }}>
-          <CopyToClipboardButton label="Webhook" textToCopy={playgroundData.webhook} />
-          <CopyToClipboardButton label="Backend" textToCopy={playgroundData.backend} />
-          <CopyToClipboardButton label="Access Key" textToCopy={playgroundData.accessKey} />
+          <CopyToClipboardButton
+            label="Webhook"
+            textToCopy={playgroundData.webhook}
+          />
+          <CopyToClipboardButton
+            label="Backend"
+            textToCopy={playgroundData.backend}
+          />
+          <CopyToClipboardButton
+            label="Access Key"
+            textToCopy={playgroundData.accessKey}
+          />
         </Container>
       </Drawer>
     </>

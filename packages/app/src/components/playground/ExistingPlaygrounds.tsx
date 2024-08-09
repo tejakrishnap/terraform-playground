@@ -16,7 +16,9 @@ const ExistingPlayground = () => {
   useEffect(() => {
     const fetchPlaygrounds = async () => {
       try {
-        const response = await axios.get(`${backendBaseUrl}/api/terraform-backend-api/get-playgrounds`);
+        const response = await axios.get(
+          `${backendBaseUrl}/api/terraform-backend-api/get-playgrounds`,
+        );
         setPlaygrounds(response.data);
       } catch (error) {
         console.error('Error fetching playgrounds:', error);
@@ -26,7 +28,7 @@ const ExistingPlayground = () => {
     fetchPlaygrounds();
   }, [backendBaseUrl]);
 
-  const handleLoadPlayground = (playground) => {
+  const handleLoadPlayground = playground => {
     navigate(`/playground?name=${playground.name}`);
   };
 
@@ -44,7 +46,10 @@ const ExistingPlayground = () => {
             <ListItemIcon>
               <PlayCircleOutlineIcon />
             </ListItemIcon>
-            <ListItemText primary={playground.name} sx={{ textTransform: 'capitalize' }} />
+            <ListItemText
+              primary={playground.name}
+              sx={{ textTransform: 'capitalize' }}
+            />
           </ListItemButton>
         </List>
       ))}

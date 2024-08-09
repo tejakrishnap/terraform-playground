@@ -1,0 +1,17 @@
+[class^='MuiInputBase-root']::before {
+  border-bottom: 1px solid #f5f3ed !important;
+}
+
+[class^='MuiFormLabel-root'] {
+  color: #f5f3ed !important;
+  font-size: 14px !important;
+}
+
+[class^='MuiInputBase-input'] {
+  color: #f5f3ed !important;
+  font-weight: 700 !important;
+}
+
+svg {
+  background-color: transparent !important;
+}

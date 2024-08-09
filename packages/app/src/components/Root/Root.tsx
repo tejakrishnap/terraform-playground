@@ -1,5 +1,10 @@
 import React, { PropsWithChildren } from 'react';
-import { makeStyles } from '@material-ui/core';
+import {
+  createTheme,
+  InputLabel,
+  makeStyles,
+  ThemeProvider,
+} from '@material-ui/core';
 import HomeIcon from '@material-ui/icons/Home';
 import ExtensionIcon from '@material-ui/icons/Extension';
 import LibraryBooks from '@material-ui/icons/LibraryBooks';
@@ -44,6 +49,51 @@ const useSidebarLogoStyles = makeStyles({
   },
 });
 
+export const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#F5F3ED',
+    },
+    secondary: {
+      main: '#1B4F4A',
+    },
+    orangePeel: {
+      main: '#FC661A', // Custom color
+      dark: '#B04712',
+    },
+    greentheme: {
+      offwhite: '#F5F3ED',
+      green: '#1B4F4A',
+      orangePeel: '#FC661A',
+      yellow: '#FFB130',
+    },
+  },
+  typography: {
+    fontFamily: 'Montserrat',
+  },
+  components: {
+    MuiInput: {
+      styleOverrides: {
+        root: {
+          color: '#F5F3ED !important',
+          '&:before': {
+            borderBottomColor: '#F5F3ED !important', // Default bottom border color
+          },
+          '&:after': {
+            borderBottomColor: '#F5F3ED !important', // Bottom border color when focused
+          },
+          '&:hover:not(.Mui-disabled):before': {
+            borderBottomColor: '#F5F3ED !important', // Bottom border color on hover
+          },
+          '& input': {
+            color: '#F5F3ED !important', // Input text color
+          },
+        },
+      },
+    },
+  },
+});
+
 const SidebarLogo = () => {
   const classes = useSidebarLogoStyles();
   const { isOpen } = useSidebarOpenState();
@@ -76,7 +126,11 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
         <SidebarItem icon={ExtensionIcon} to="api-docs" text="APIs" />
         <SidebarItem icon={LibraryBooks} to="docs" text="Docs" />
         <SidebarItem icon={CreateComponentIcon} to="create" text="Create..." />
-        <SidebarItem icon={SportsEsportsIcon} to="create-playground" text="Playground" />
+        <SidebarItem
+          icon={SportsEsportsIcon}
+          to="create-playground"
+          text="Playground"
+        />
         {/* End global nav */}
         <SidebarDivider />
         <SidebarScrollWrapper>
@@ -93,6 +147,6 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
         <SidebarSettings />
       </SidebarGroup>
     </Sidebar>
-    {children}
+    <ThemeProvider theme={theme}>{children}</ThemeProvider>
   </SidebarPage>
 );

@@ -19,12 +19,7 @@ export const terraformBackendApiPlugin = createBackendPlugin({
         config: coreServices.rootConfig,
         database: coreServices.database,
       },
-      async init({
-        httpRouter,
-        logger,
-        config,
-        database,
-      }) {
+      async init({ httpRouter, logger, config, database }) {
         httpRouter.use(
           await createRouter({
             logger,
@@ -33,11 +28,11 @@ export const terraformBackendApiPlugin = createBackendPlugin({
           }),
         );
         httpRouter.addAuthPolicy({
-          path: '/health',
+          path: '/create-playground',
           allow: 'unauthenticated',
         });
         httpRouter.addAuthPolicy({
-          path: '/save-terraform',
+          path: '/get-playground-data',
           allow: 'unauthenticated',
         });
         httpRouter.addAuthPolicy({
@@ -45,7 +40,7 @@ export const terraformBackendApiPlugin = createBackendPlugin({
           allow: 'unauthenticated',
         });
         httpRouter.addAuthPolicy({
-          path: '/playground',
+          path: '/get-playgrounds',
           allow: 'unauthenticated',
         });
       },

@@ -1,6 +1,9 @@
 import { PluginDatabaseManager } from '@backstage/backend-common';
 import { MiddlewareFactory } from '@backstage/backend-defaults/rootHttpRouter';
-import { LoggerService, resolvePackagePath } from '@backstage/backend-plugin-api';
+import {
+  LoggerService,
+  resolvePackagePath,
+} from '@backstage/backend-plugin-api';
 import { Config } from '@backstage/config';
 import express from 'express';
 import Router from 'express-promise-router';
@@ -19,8 +22,8 @@ export async function applyDatabaseMigrations(knex: Knex): Promise<void> {
   );
 
   await knex.migrate.latest({
-    directory: migrationsDir
-  })
+    directory: migrationsDir,
+  });
 }
 export async function createRouter(
   options: RouterOptions,
