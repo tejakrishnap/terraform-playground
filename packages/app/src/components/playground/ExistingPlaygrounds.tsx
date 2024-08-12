@@ -34,13 +34,14 @@ const ExistingPlayground = () => {
 
   return (
     <Box sx={{ width: '100%', bgcolor: 'background.paper' }}>
-      <h1 style={{ marginLeft: 16 }}>Existing Playgrounds</h1>
+      <h1 style={{ marginLeft: 16, color: 'black'}}>Existing Playgrounds</h1>
       <Divider />
       {playgrounds.map(playground => (
         <List
           component="nav"
           aria-label="Existing Items List"
           key={playground.name}
+          style={{color: 'black'}}
         >
           <ListItemButton onClick={() => handleLoadPlayground(playground)}>
             <ListItemIcon>

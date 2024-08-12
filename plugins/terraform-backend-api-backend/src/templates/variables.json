@@ -1,0 +1,195 @@
+{
+    "ECS-Cluster": {
+      "inputs": {
+        "cluster_name": {
+          "description": "Name of the ECS cluster",
+          "type": "string"
+        }
+      }, 
+      "outputs": {
+        "cluster_name": {
+          "value": "aws_ecs_cluster.this.name"
+        }
+      }
+    },
+    "ECS-Service": {
+      "inputs": {
+        "service_name": {
+          "description": "Name of the ECS service",
+          "type": "string"
+        },
+        "cluster_name": {
+          "description": "Name of the ECS cluster",
+          "type": "string"
+        },
+        "task_definition_arn": {
+          "description": "ARN of the task definition to use for the service",
+          "type": "string"
+        },
+        "desired_count": {
+          "description": "The number of instances of the task definition to run",
+          "type": "number",
+          "default": 1
+        },
+        "launch_type": {
+          "description": "Launch type for the ECS service (EC2 or FARGATE)",
+          "type": "string",
+          "default": "EC2"
+        },
+        "target_group_arn": {
+          "description": "ARN of the target group for the load balancer",
+          "type": "string"
+        },
+        "container_name": {
+          "description": "Name of the container to associate with the load balancer",
+          "type": "string"
+        },
+        "container_port": {
+          "description": "Port number on the container to associate with the load balancer",
+          "type": "number"
+        },
+        "subnet_ids": {
+          "description": "List of subnet IDs for the ECS service",
+          "type": "list(string)"
+        },
+        "security_group_ids": {
+          "description": "List of security group IDs to associate with the service",
+          "type": "list(string)"
+        },
+        "assign_public_ip": {
+          "description": "Assign a public IP address to the ECS service",
+          "type": "bool",
+          "default": false
+        },
+        "service_registry_arn": {
+          "description": "ARN of the service registry (optional)",
+          "type": "string",
+          "default": null
+        },
+        "minimum_healthy_percent": {
+          "description": "Minimum percentage of tasks that must remain healthy during a deployment",
+          "type": "number",
+          "default": 50
+        },
+        "maximum_percent": {
+          "description": "Maximum percentage of tasks that can be running during a deployment",
+          "type": "number",
+          "default": 200
+        },
+        "tags": {
+          "description": "A map of tags to assign to the service",
+          "type": "map(string)",
+          "default": {}
+        }
+      },
+      "outputs": {
+        "service_name": {
+          "description": "Name of the ECS service",
+          "value"      : "aws_ecs_service.this.name"
+        },
+        "service_arn": {
+          "description": "ARN of the ECS service",
+          "value"      : "aws_ecs_service.this.arn"
+        }        
+      }
+    },
+    "ECS-Task-Definition": {
+      "inputs": {
+        "family": {
+          "description": "Name of the task definition family",
+          "type": "string"
+        },
+        "container_definitions": {
+          "description": "JSON definition of the containers in the task",
+          "type": "string"
+        },
+        "task_role_arn": {
+          "description": "ARN of the IAM role that allows the ECS tasks to make calls to AWS services",
+          "type": "string",
+          "default": null
+        },
+        "execution_role_arn": {
+          "description": "ARN of the IAM role that grants the ECS agent permission to pull images and publish logs",
+          "type": "string",
+          "default": null
+        },
+        "network_mode": {
+          "description": "The Docker networking mode to use for the containers in the task",
+          "type": "string",
+          "default": "bridge"
+        },
+        "requires_compatibilities": {
+          "description": "A list of launch types required by the task",
+          "type": "list(string)",
+          "default": ["EC2"]
+        },
+        "cpu": {
+          "description": "The number of cpu units used by the task",
+          "type": "string",
+          "default": "256"
+        },
+        "memory": {
+          "description": "The amount of memory (in MiB) used by the task",
+          "type": "string",
+          "default": "512"
+        },
+        "tags": {
+          "description": "A map of tags to assign to the resource",
+          "type": "map(string)",
+          "default": {}
+        }
+      },
+      "outputs": {
+        "task_definition_arn": {
+          "description": "ARN of the created ECS Task Definition",
+          "value": "aws_ecs_task_definition.this.arn"
+        },  
+        "task_definition_revision": {
+          "description": "Revision of the ECS Task Definition",
+          "value"      : "aws_ecs_task_definition.this.revision"
+        }
+      }
+    },
+    "Security-Group": {
+      "inputs": {
+        "ingress_rules": {
+          "description": "List of security group rules",
+          "type": "list(object({ description = string, from_port = number, to_port = number, protocol = string, cidr_blocks = list(string) }))"
+        },
+        "vpc_id": {
+          "type": "string"
+        },
+        "egress_rules": {
+          "description": "List of security group rules",
+          "type": "list(object({ description = string, from_port = number, to_port = number, protocol = string, cidr_blocks = list(string) }))"
+        }
+      },
+      "outputs": {
+        "security_group_id": {
+          "value": "aws_security_group.dynamic_sg.id"
+        }
+      }
+    },
+    "Application-Load-Balancer": {
+      "inputs": {
+        "vpc_id": {
+          "type": "string"
+        },
+        "security_group_ids": {
+          "type": "list(string)"
+        },
+        "subnet_ids": {
+          "type": "list(string)"
+        },
+        "alb_name": {
+          "type": "string"
+        }
+      },
+      "outputs": {
+        "target_group_arn": {
+          "value": "aws_lb_target_group.this.arn"
+        }
+      }
+    }
+  }
+  

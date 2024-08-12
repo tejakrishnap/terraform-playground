@@ -43,6 +43,14 @@ export const terraformBackendApiPlugin = createBackendPlugin({
           path: '/get-playgrounds',
           allow: 'unauthenticated',
         });
+        httpRouter.addAuthPolicy({
+          path: '/fetch-file',
+          allow: 'unauthenticated',
+        });
+        httpRouter.addAuthPolicy({
+          path: '/get-variable-data',
+          allow: 'unauthenticated',
+        });
       },
     });
   },

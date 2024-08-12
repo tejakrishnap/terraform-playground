@@ -1,58 +1,63 @@
 import React, { useState } from 'react';
 import { useDrop } from 'react-dnd';
 import { ReactSVG } from 'react-svg';
-import { terraformTemplates } from '../../terraformTemplates';
+import Draggable from 'react-draggable';
+import axios from 'axios';
 import HighlightOffIcon from '@material-ui/icons/HighlightOffSharp';
-import { Box, Button, Modal, TextField } from '@material-ui/core';
+import { Box, Button, Chip, Modal, TextField } from '@material-ui/core';
 import { theme } from '../Root/Root';
+import { configApiRef, useApi } from '@backstage/core-plugin-api';
 
 const ItemType = {
   TOOL: 'tool',
 };
 
 const iconMapping = {
-  ECS: 'icons/Ecs.svg',
-  Lambda: 'icons/Lambda.svg',
-  RDS: 'icons/Rds.svg',
-  Redshift: 'icons/Redshift.svg',
-};
-
-const getInputsForItem = (itemName: string) => {
-  switch (itemName) {
-    case 'ECS':
-      return [
-        { label: 'Name', key: 'name' },
-        { label: 'Age', key: 'age' },
-        { label: 'Gender', key: 'gender' },
-      ];
-    case 'Lambda':
-      return [
-        { label: 'Function Name', key: 'functionName' },
-        { label: 'Runtime', key: 'runtime' },
-      ];
-    case 'RDS':
-      return [
-        { label: 'DB Name', key: 'dbName' },
-        { label: 'Username', key: 'username' },
-      ];
-    case 'Redshift':
-      return [
-        { label: 'Cluster ID', key: 'clusterId' },
-        { label: 'Node Type', key: 'nodeType' },
-      ];
-    default:
-      return [];
-  }
+  'ECS-Cluster': 'icons/ECS-Cluster.svg',
+  'ECS-Service': 'icons/ECS-Service.svg',
+  'ECS-Task-Definition': 'icons/ECS-Task-Definition.svg',
+  RDS: 'icons/RDS.svg',
+  'Security-Group': 'icons/Security-Group.svg',
+  'Application-Load-Balancer': 'icons/Application-Load-Balancer.svg',
 };
 
 export const Canvas = ({ items, setItems }) => {
   const [open, setOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [inputValues, setInputValues] = useState({});
+  // const [variableData, setVariableData] = useState([]);
+  const [variableData, setVariableData] = useState({ inputs: {}, outputs: {} });
+  const [error, setError] = useState(null);
+  const configApi = useApi(configApiRef);
+  const backendBaseUrl = configApi.getString('backend.baseUrl');
 
-  const handleOpen = item => {
+  const handleOpen = async item => {
     setSelectedItem(item);
     setInputValues(item.data || {});
+
+    try {
+      const response = await axios.post(
+        `${backendBaseUrl}/api/terraform-backend-api/get-variable-data`,
+        {
+          serviceKey: item.name, // Send the service key as payload
+        },
+      );
+      // console.log('Variable data response:', response.data);
+      // setVariableData(response.data[item.name]?.inputs || []);
+      const data = response.data;
+
+      if (response.status === 200) {
+        setVariableData(data);
+      } else {
+        setError(data.message);
+        setVariableData({ inputs: {}, outputs: {} });
+      }
+    } catch (error) {
+      console.error('Error fetching variable data:', error);
+      setError('Failed to fetch variable data');
+      setVariableData({ inputs: {}, outputs: {} });
+    }
+
     setOpen(true);
   };
 
@@ -72,7 +77,6 @@ export const Canvas = ({ items, setItems }) => {
       return item;
     });
     setItems(updatedItems);
-    generateTerraformFile(updatedItems);
     handleClose();
   };
 
@@ -82,7 +86,6 @@ export const Canvas = ({ items, setItems }) => {
       const newItem = { ...item, id: Date.now() };
       const newItems = [...items, newItem];
       setItems(newItems);
-      generateTerraformFile(newItems);
 
       return newItems;
     },
@@ -91,19 +94,16 @@ export const Canvas = ({ items, setItems }) => {
     }),
   });
 
-  const generateTerraformFile = items => {
-    let terraformContent = '';
-    items.forEach(item => {
-      const moduleContent = terraformTemplates[item.name.toLowerCase()];
-      terraformContent += `\n# Module: ${item.name}\n${moduleContent}`;
-    });
-    console.log(terraformContent);
-  };
-
-  const handleRemoveItem = (id: number) => {
+  const handleRemoveItem = id => {
     const updatedItems = items.filter(item => item.id !== id);
     setItems(updatedItems);
-    generateTerraformFile(updatedItems);
+  };
+
+  const toCapitalCase = name => {
+    return name
+      .replace(/_/g, ' ') // Replace underscores with spaces
+      .toLowerCase() // Convert to lowercase
+      .replace(/\b\w/g, char => char.toUpperCase());
   };
 
   return (
@@ -117,15 +117,9 @@ export const Canvas = ({ items, setItems }) => {
       }}
     >
       {items.map((item, index) => (
-        <Box sx={{ position: 'relative' }}>
-          <div
-            key={item.id}
-            style={{
-              marginTop: '20px',
-              position: 'absolute',
-              top: `${index * 120}px`,
-              left: '50px',
-            }}
+        <Draggable key={item.id}>
+          <Box
+            sx={{ position: 'absolute', top: `${index * 120}px`, left: '50px' }}
           >
             <HighlightOffIcon
               onClick={() => handleRemoveItem(item.id)}
@@ -142,10 +136,10 @@ export const Canvas = ({ items, setItems }) => {
             <ReactSVG
               src={iconMapping[item.name]}
               style={{ width: '60px', height: '60px', cursor: 'pointer' }}
-              onClick={() => handleOpen(item)}
+              onDoubleClick={() => handleOpen(item)}
             />
-          </div>
-        </Box>
+          </Box>
+        </Draggable>
       ))}
       <Modal open={open} onClose={handleClose} style={{ outline: 'none' }}>
         <Box
@@ -155,24 +149,52 @@ export const Canvas = ({ items, setItems }) => {
             left: '50%',
             transform: 'translate(-50%, -50%)',
             width: 600,
-            bgcolor: 'background.paper',
+            maxHeight: '80%',
+            bgcolor: 'greentheme.green',
             p: 4,
             outline: 'none',
             borderRadius: 16,
+            overflowY: 'auto',
           }}
         >
-          <h2>Edit {selectedItem?.name} Configuration</h2>
-          {selectedItem &&
-            getInputsForItem(selectedItem.name).map(input => (
-              <TextField
-                key={input.key}
-                label={input.label}
-                value={inputValues[input.key] || ''}
-                onChange={e => handleInputChange(input.key, e.target.value)}
-                fullWidth
-                margin="normal"
+          <h2 style={{ color: theme.palette.greentheme.offwhite }}>
+            {selectedItem?.name.replace(/-/g, ' ')} Configuration
+          </h2>
+
+          <h3 style={{ color: theme.palette.greentheme.offwhite }}>Outputs</h3>
+          <Box sx={{display: 'flex', gridGap: 6}}>
+            {Object.entries(variableData.outputs || {}).map(([key, value]) => (
+              <Chip
+                key={key}
+                label={value.value}
+                style={{
+                  backgroundColor: theme.palette.greentheme.offwhite,
+                  fontWeight: 600,
+                }}
               />
             ))}
+          </Box>
+          <h3
+            style={{
+              color: theme.palette.greentheme.offwhite,
+              marginBottom: 0,
+            }}
+          >
+            Inputs
+          </h3>
+          {Object.entries(variableData?.inputs).map(([key, value]) => (
+            <TextField
+              key={key}
+              label={toCapitalCase(key)}
+              helperText={value.description || ''}
+              type={value.type === 'number' ? 'number' : 'text'}
+              defaultValue={value.default || ''}
+              value={inputValues[key] || ''}
+              onChange={e => handleInputChange(key, e.target.value)}
+              fullWidth
+              margin="normal"
+            />
+          ))}
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <Button
               variant="contained"
@@ -185,7 +207,7 @@ export const Canvas = ({ items, setItems }) => {
             <Button
               variant="contained"
               color="secondary"
-              onClick={handleSave}
+              onClick={handleClose}
               style={{ marginTop: 16, marginLeft: 16 }}
             >
               Close

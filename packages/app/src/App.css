@@ -1,3 +1,7 @@
+body {
+  background-color: #f5f3ed !important;
+}
+
 [class^='MuiInputBase-root']::before {
   border-bottom: 1px solid #f5f3ed !important;
 }
@@ -10,6 +14,12 @@
 [class^='MuiInputBase-input'] {
   color: #f5f3ed !important;
   font-weight: 700 !important;
+}
+
+[class^='MuiFormHelperText'] {
+  color: #FFB130 !important;
+  font-weight: 500 !important;
+  font-size: 10px !important;
 }
 
 svg {

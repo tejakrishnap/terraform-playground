@@ -8,6 +8,13 @@ import { Config } from '@backstage/config';
 import express from 'express';
 import Router from 'express-promise-router';
 import { Knex } from 'knex';
+import axios from 'axios';
+import dotenv from 'dotenv';
+import hclToJson from 'hcl-to-json';
+import fs from 'fs';
+import path from 'path';
+
+dotenv.config();
 
 export interface RouterOptions {
   logger: LoggerService;
@@ -29,6 +36,11 @@ export async function createRouter(
   options: RouterOptions,
 ): Promise<express.Router> {
   const { logger, config, database } = options;
+  // const gitlabFileUrl = 'https://gitlab.example.com/api/v4/projects/60559076/terraform-modules/-/raw/main/alb/variables.tf?ref=main';
+  const gitlabToken = process.env.GITLAB_TOKEN;
+  const projectId = '60559076';
+  const filePath = '-/raw/main/alb/variables.tf';
+  const ref = 'main'; 
 
   const dbClient = await database.getClient();
   await applyDatabaseMigrations(dbClient);
@@ -108,6 +120,101 @@ export async function createRouter(
       res.status(500).json({ message: 'Failed to fetch playgrounds' });
     }
   });
+
+  // router.get('/fetch-file', async (req, res) => {
+  //   try {
+  //     const response = await axios.get(`https://gitlab.com/api/v4/projects/${encodeURIComponent(projectId)}/repository/files/${encodeURIComponent(filePath)}`, {
+  //       headers: {
+  //         'PRIVATE-TOKEN': gitlabToken,
+  //       },
+  //       params: {
+  //         ref,
+  //       },
+  //     });
+
+  //     console.log(response.data);
+
+  //     res.set('Content-Type', 'text/plain');
+  //     res.send(response.data);
+  //   } catch (error: any) {
+  //     console.error('Error fetching file content:', error.message);
+  //     if (error.response) {
+  //       console.error('Response status:', error.response.status);
+  //       console.error('Response data:', error.response.data);
+  //       res.status(error.response.status).send(error.response.data);
+  //     } else {
+  //       res.status(500).send(`Error fetching file content: ${error.message}`);
+  //     }
+  //   }
+  // });
+
+  router.post('/get-variable-data', async (req, res) => {
+    try {
+      const { serviceKey } = req.body;
+      const filePath = path.resolve(__dirname, '../templates/variables.json');
+      const rawData = fs.readFileSync(filePath);
+      const terraformData = JSON.parse(rawData);
+  
+      if (!serviceKey) {
+        return res.status(400).json({ message: 'Service key is required' });
+      }
+  
+      const serviceData = terraformData[serviceKey];
+
+      console.log(serviceData);
+  
+      if (!serviceData) {
+        return res.status(404).json({ message: 'Service not found' });
+      }
+  
+      const response = {
+        inputs: {},
+        outputs: {}
+      };
+    
+      for (const [key, value] of Object.entries(serviceData)) {
+        if (key === 'inputs') {
+          response.inputs = value;
+        } else if (key === 'outputs') {
+          response.outputs = value;
+        }
+      }
+  
+      res.status(200).json(response);
+    } catch (error) {
+      console.error('Error fetching variable data:', error);
+      res.status(500).json({ message: 'Failed to fetch variable data' });
+    }
+  });
+  
+  // const fetchTerraformData = async () => {
+  //   const rawData = `
+  //     variable "infra_env" {
+  //       type = string
+  //       description = "infrastructure environment"
+  //     }
+  //     variable "infra_role" {
+  //       type = string
+  //       description = "infrastructure purpose"
+  //     }
+  //     variable "instance_size" {
+  //       type = string
+  //       description = "ec2 web server size"
+  //       default = "t3.small"
+  //     }
+  //     variable "instance_ami" {
+  //       type = string
+  //       description = "Server image to use"
+  //     }
+  //     variable "instance_root_device_size" {
+  //       type = number
+  //       description = "Root block device size in GB"
+  //       default = 12
+  //     }
+  //   `;
+
+  //   return rawData;
+  // }
 
   const middleware = MiddlewareFactory.create({ logger, config });
   router.use(middleware.error());

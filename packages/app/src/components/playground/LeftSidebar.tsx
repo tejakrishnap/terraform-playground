@@ -23,10 +23,11 @@ const ToolItem: React.FC<ToolItemProps> = ({ id, name, svgSrc }) => {
     }),
   }));
 
+  const displayName = name.replace(/-/g, ' ');
+
   return (
     <div
       style={{
-        width: 'fit-content',
         color: theme.palette.greentheme.offwhite,
         display: 'flex',
         flexDirection: 'column',
@@ -36,11 +37,12 @@ const ToolItem: React.FC<ToolItemProps> = ({ id, name, svgSrc }) => {
         opacity: isDragging ? 0.5 : 1,
         padding: '8px',
         margin: '4px',
+        width: 60
       }}
       ref={drag}
     >
       <ReactSVG src={svgSrc} style={{ width: '48px', height: '48px' }} />
-      {name}
+      <Box sx={{textOverflow: 'wrap', mt: 1, textAlign: 'center'}}>{displayName}</Box>
     </div>
   );
 };
@@ -91,10 +93,12 @@ const ResourcePalette = ({ resources }) => {
 
 export const LeftSidebar = () => {
   const resources = [
-    { id: '1', name: 'ECS', svgSrc: 'icons/Ecs.svg' },
-    { id: '2', name: 'Lambda', svgSrc: 'icons/Lambda.svg' },
-    { id: '3', name: 'RDS', svgSrc: 'icons/Rds.svg' },
-    { id: '4', name: 'Redshift', svgSrc: 'icons/Redshift.svg' },
+    { id: '1', name: 'ECS-Cluster', svgSrc: 'icons/ECS-Cluster.svg' },
+    { id: '2', name: 'ECS-Service', svgSrc: 'icons/ECS-Service.svg' },
+    { id: '3', name: 'ECS-Task-Definition', svgSrc: 'icons/ECS-Task-Definition.svg' },
+    { id: '4', name: 'RDS', svgSrc: 'icons/RDS.svg' },
+    { id: '5', name: 'Security-Group', svgSrc: 'icons/Security-Group.svg' },
+    { id: '6', name: 'Application-Load-Balancer', svgSrc: 'icons/Application-Load-Balancer.svg' },
   ];
 
   return (
