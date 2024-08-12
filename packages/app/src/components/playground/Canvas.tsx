@@ -160,20 +160,6 @@ export const Canvas = ({ items, setItems }) => {
           <h2 style={{ color: theme.palette.greentheme.offwhite }}>
             {selectedItem?.name.replace(/-/g, ' ')} Configuration
           </h2>
-
-          <h3 style={{ color: theme.palette.greentheme.offwhite }}>Outputs</h3>
-          <Box sx={{display: 'flex', gridGap: 6}}>
-            {Object.entries(variableData.outputs || {}).map(([key, value]) => (
-              <Chip
-                key={key}
-                label={value.value}
-                style={{
-                  backgroundColor: theme.palette.greentheme.offwhite,
-                  fontWeight: 600,
-                }}
-              />
-            ))}
-          </Box>
           <h3
             style={{
               color: theme.palette.greentheme.offwhite,
@@ -195,6 +181,20 @@ export const Canvas = ({ items, setItems }) => {
               margin="normal"
             />
           ))}
+
+          <h3 style={{ color: theme.palette.greentheme.offwhite }}>Outputs</h3>
+          <Box sx={{display: 'flex', gridGap: 6}}>
+            {Object.entries(variableData.outputs || {}).map(([key, value]) => (
+              <Chip
+                key={key}
+                label={value.value}
+                style={{
+                  backgroundColor: theme.palette.greentheme.offwhite,
+                  fontWeight: 600,
+                }}
+              />
+            ))}
+          </Box>
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <Button
               variant="contained"

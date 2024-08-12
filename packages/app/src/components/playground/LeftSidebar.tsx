@@ -66,7 +66,7 @@ const ResourcePalette = ({ resources }) => {
           color: theme.palette.greentheme.offwhite,
         }}
       >
-        Toolbar
+        Modules
       </h2>
       <Box
         sx={{
