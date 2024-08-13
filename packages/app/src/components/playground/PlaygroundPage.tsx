@@ -153,7 +153,7 @@ export const PlaygroundPage = () => {
           {/* <div className={classes.sidebar}>
             <RightSidebar />
           </div> */}
-          <Box position="fixed" bottom={72} right={16}>
+          <Box position="fixed" bottom={72} right={16} zIndex={2}>
             <RoundedButton
               variant="contained"
               color="secondary"
@@ -162,7 +162,7 @@ export const PlaygroundPage = () => {
               Playground data
             </RoundedButton>
           </Box>
-          <Box position="fixed" bottom={16} right={16}>
+          <Box position="fixed" bottom={16} right={16} zIndex={2}>
             <RoundedButton
               variant="contained"
               color="primary"

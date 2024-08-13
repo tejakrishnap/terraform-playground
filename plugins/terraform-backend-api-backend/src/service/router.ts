@@ -93,9 +93,13 @@ export async function createRouter(
 
   router.post('/save-playground', async (req, res) => {
     const { name, items, webhook, backend, accessKey } = req.body;
-
+  
     try {
-      await dbClient('playground')
+      if (!name || !items || !Array.isArray(items)) {
+        throw new Error('Invalid payload');
+      }
+
+      const result = await dbClient('playground')
         .where({ name })
         .update({
           items: JSON.stringify(items),
@@ -104,12 +108,20 @@ export async function createRouter(
           access_key: accessKey,
         });
 
+      if (result === 0) {
+        throw new Error('No rows updated');
+      }
+  
       res.status(200).json({ message: 'Playground saved successfully' });
     } catch (error: any) {
-      logger.error('Error saving playground:', error);
-      res.status(500).json({ message: 'Failed to save playground' });
+      logger.error('Error saving playground:', {
+        message: error.message,
+        stack: error.stack,
+      });
+      res.status(500).json({ message: 'Failed to save playground', error: error.message });
     }
   });
+  
 
   router.get('/get-playgrounds', async (req, res) => {
     try {
@@ -120,33 +132,6 @@ export async function createRouter(
       res.status(500).json({ message: 'Failed to fetch playgrounds' });
     }
   });
-
-  // router.get('/fetch-file', async (req, res) => {
-  //   try {
-  //     const response = await axios.get(`https://gitlab.com/api/v4/projects/${encodeURIComponent(projectId)}/repository/files/${encodeURIComponent(filePath)}`, {
-  //       headers: {
-  //         'PRIVATE-TOKEN': gitlabToken,
-  //       },
-  //       params: {
-  //         ref,
-  //       },
-  //     });
-
-  //     console.log(response.data);
-
-  //     res.set('Content-Type', 'text/plain');
-  //     res.send(response.data);
-  //   } catch (error: any) {
-  //     console.error('Error fetching file content:', error.message);
-  //     if (error.response) {
-  //       console.error('Response status:', error.response.status);
-  //       console.error('Response data:', error.response.data);
-  //       res.status(error.response.status).send(error.response.data);
-  //     } else {
-  //       res.status(500).send(`Error fetching file content: ${error.message}`);
-  //     }
-  //   }
-  // });
 
   router.post('/get-variable-data', async (req, res) => {
     try {

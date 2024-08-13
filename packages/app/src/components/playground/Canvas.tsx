@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useDrop } from 'react-dnd';
 import { ReactSVG } from 'react-svg';
-import Draggable from 'react-draggable';
-import axios from 'axios';
 import HighlightOffIcon from '@material-ui/icons/HighlightOffSharp';
 import { Box, Button, Chip, Modal, TextField } from '@material-ui/core';
 import { theme } from '../Root/Root';
+import ReactFlow, {
+  addEdge,
+  Background,
+  Controls,
+  Handle,
+  useEdgesState,
+  useNodesState,
+} from 'react-flow-renderer';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
+import axios from 'axios';
 
 const ItemType = {
   TOOL: 'tool',
@@ -21,15 +28,117 @@ const iconMapping = {
   'Application-Load-Balancer': 'icons/Application-Load-Balancer.svg',
 };
 
+const CustomNode = ({ id, data, handleRemoveItem }) => {
+  const handleRemoveNode = () => {
+    handleRemoveItem(id);
+  };
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        width: '48px',
+        height: '48px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <HighlightOffIcon
+        onClick={handleRemoveNode}
+        style={{
+          position: 'absolute',
+          left: '44px',
+          top: '-10px',
+          color: '#27ae60',
+          width: '12px',
+          height: '12px',
+          cursor: 'pointer',
+        }}
+      />
+      <ReactSVG
+        src={iconMapping[data.label]}
+        style={{ width: '38px', height: '38px', cursor: 'pointer' }}
+        onDoubleClick={data.onOpen}
+        title={data.label}
+      />
+      <Handle type="source" position="right" id="source" />
+      <Handle type="target" position="left" id="target" />
+    </div>
+  );
+};
+
+// Define nodeTypes outside the component to avoid recreation on every render
+const nodeTypes = {
+  custom: (props) => <CustomNode {...props} handleRemoveItem={props.data.handleRemoveItem} />,
+};
+
 export const Canvas = ({ items, setItems }) => {
   const [open, setOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [inputValues, setInputValues] = useState({});
-  // const [variableData, setVariableData] = useState([]);
   const [variableData, setVariableData] = useState({ inputs: {}, outputs: {} });
   const [error, setError] = useState(null);
   const configApi = useApi(configApiRef);
   const backendBaseUrl = configApi.getString('backend.baseUrl');
+
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  useEffect(() => {
+    const newNodes = items.map(item => ({
+      id: item.id,
+      position: item.position || { x: 100, y: 100 },
+      data: {
+        label: item.name,
+        onRemove: handleRemoveNode,
+        onOpen: () => handleOpen(item),
+        handleRemoveItem: handleRemoveItem,
+      },
+      type: 'custom',
+    }));
+  
+    setNodes(newNodes);
+  
+    const newEdges = items.flatMap(item =>
+      (item.connections || [])
+        .filter(conn => conn.target !== item.id)
+        .map(conn => ({
+          id: `${item.id}-${conn.target}`,
+          source: item.id,
+          target: conn.target,
+          sourceHandle: 'source',
+          targetHandle: 'target',
+        }))
+    );
+
+    const distinctEdges = Array.from(new Set(newEdges.map(edge => JSON.stringify(edge)))).map(e => JSON.parse(e));
+  
+    setEdges(distinctEdges);
+  }, [items, setNodes, setEdges]);
+
+  const handleConnect = useCallback(
+    (params) => {
+      setEdges((eds) => addEdge({ ...params, sourceHandle: 'source', targetHandle: 'target' }, eds));
+      
+      const { source, target } = params;
+      setItems((items) => 
+        items.map((item) => {
+          if (item.id === source || item.id === target) {
+            const updatedConnections = (item.connections || []).concat({ source, target });
+            return { ...item, connections: updatedConnections };
+          }
+          return item;
+        })
+      );
+    },
+    [setEdges, setItems]
+  );
+
+  const onConnect = useCallback(
+    params => handleConnect(params),
+    [handleConnect]
+  );
 
   const handleOpen = async item => {
     setSelectedItem(item);
@@ -39,11 +148,9 @@ export const Canvas = ({ items, setItems }) => {
       const response = await axios.post(
         `${backendBaseUrl}/api/terraform-backend-api/get-variable-data`,
         {
-          serviceKey: item.name, // Send the service key as payload
+          serviceKey: item.name,
         },
       );
-      // console.log('Variable data response:', response.data);
-      // setVariableData(response.data[item.name]?.inputs || []);
       const data = response.data;
 
       if (response.status === 200) {
@@ -63,47 +170,92 @@ export const Canvas = ({ items, setItems }) => {
 
   const handleClose = () => {
     setOpen(false);
+    setSelectedItem(null);
+    setInputValues({});
   };
 
   const handleInputChange = (key, value) => {
     setInputValues({ ...inputValues, [key]: value });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updatedItems = items.map(item => {
       if (item.id === selectedItem.id) {
         return { ...item, data: inputValues };
       }
       return item;
     });
+
     setItems(updatedItems);
     handleClose();
   };
 
   const [{ isOver }, drop] = useDrop({
     accept: ItemType.TOOL,
-    drop: item => {
-      const newItem = { ...item, id: Date.now() };
-      const newItems = [...items, newItem];
-      setItems(newItems);
+    drop: (item, monitor) => {
+      const offset = monitor.getClientOffset();
+      const newPosition = {
+        x: offset.x - monitor.getInitialClientOffset().x,
+        y: offset.y - monitor.getInitialClientOffset().y,
+      };
 
-      return newItems;
+      const newItem = {
+        ...item,
+        id: Date.now().toString(),
+        position: newPosition,
+      };
+
+      if (!items.some(existingItem => existingItem.id === newItem.id)) {
+        const newItems = [...items, newItem];
+        setItems(newItems);
+
+        const newNode = {
+          id: newItem.id,
+          position: newItem.position,
+          data: {
+            label: newItem.name,
+            onRemove: handleRemoveNode,
+            onOpen: () => handleOpen(newItem),
+            handleRemoveItem: handleRemoveItem,
+          },
+          type: 'custom',
+        };
+        setNodes(nds => [...nds, newNode]);
+      }
     },
     collect: monitor => ({
       isOver: !!monitor.isOver(),
     }),
   });
 
+  const handleRemoveNode = nodeId => {
+    setNodes(nds => nds.filter(node => node.id !== nodeId));
+    setEdges(eds =>
+      eds.filter(edge => edge.source !== nodeId && edge.target !== nodeId),
+    );
+  };
+
   const handleRemoveItem = id => {
     const updatedItems = items.filter(item => item.id !== id);
     setItems(updatedItems);
+    handleRemoveNode(id);
   };
 
   const toCapitalCase = name => {
     return name
-      .replace(/_/g, ' ') // Replace underscores with spaces
-      .toLowerCase() // Convert to lowercase
+      .replace(/_/g, ' ')
+      .toLowerCase()
       .replace(/\b\w/g, char => char.toUpperCase());
+  };
+
+  const handleNodeDragStop = (event, node) => {
+    const updatedItems = items.map(item => {
+      if (item.id === node.id) {
+        return { ...item, position: node.position };
+      }
+      return item;
+    });
+    setItems(updatedItems);
   };
 
   return (
@@ -114,35 +266,24 @@ export const Canvas = ({ items, setItems }) => {
         width: '100%',
         height: '100%',
         backgroundColor: theme.palette.primary.main,
+        zIndex: 1,
       }}
     >
-      {items.map((item, index) => (
-        <Draggable key={item.id}>
-          <Box
-            sx={{ position: 'absolute', top: `${index * 120}px`, left: '50px' }}
-          >
-            <HighlightOffIcon
-              onClick={() => handleRemoveItem(item.id)}
-              style={{
-                position: 'relative',
-                left: '50px',
-                top: '0px',
-                color: '#27ae60',
-                width: '20px',
-                height: '20px',
-                cursor: 'pointer',
-              }}
-            />
-            <ReactSVG
-              src={iconMapping[item.name]}
-              style={{ width: '60px', height: '60px', cursor: 'pointer' }}
-              onDoubleClick={() => handleOpen(item)}
-            />
-          </Box>
-        </Draggable>
-      ))}
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeDragStop={handleNodeDragStop}
+        fitView
+        nodeTypes={nodeTypes}
+      >
+        <Background />
+        <Controls />
+      </ReactFlow>
       <Modal open={open} onClose={handleClose} style={{ outline: 'none' }}>
-        <Box
+      <Box
           sx={{
             position: 'absolute',
             top: '50%',
@@ -168,7 +309,7 @@ export const Canvas = ({ items, setItems }) => {
           >
             Inputs
           </h3>
-          {Object.entries(variableData?.inputs).map(([key, value]) => (
+          {Object.entries(variableData?.inputs || {}).map(([key, value]) => (
             <TextField
               key={key}
               label={toCapitalCase(key)}
@@ -179,11 +320,11 @@ export const Canvas = ({ items, setItems }) => {
               onChange={e => handleInputChange(key, e.target.value)}
               fullWidth
               margin="normal"
+              disabled={value.readOnly}
             />
           ))}
-
           <h3 style={{ color: theme.palette.greentheme.offwhite }}>Outputs</h3>
-          <Box sx={{display: 'flex', gridGap: 6}}>
+          <Box sx={{ display: 'flex', gridGap: 6 }}>
             {Object.entries(variableData.outputs || {}).map(([key, value]) => (
               <Chip
                 key={key}
@@ -197,9 +338,9 @@ export const Canvas = ({ items, setItems }) => {
           </Box>
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
             <Button
+              onClick={handleSave}
               variant="contained"
               color="primary"
-              onClick={handleSave}
               style={{ marginTop: 16 }}
             >
               Save
@@ -208,9 +349,9 @@ export const Canvas = ({ items, setItems }) => {
               variant="contained"
               color="secondary"
               onClick={handleClose}
-              style={{ marginTop: 16, marginLeft: 16 }}
+              style={{ marginTop: 16, marginLeft: 8 }}
             >
-              Close
+              Cancel
             </Button>
           </Box>
         </Box>
@@ -218,5 +359,3 @@ export const Canvas = ({ items, setItems }) => {
     </div>
   );
 };
-
-export default Canvas;
