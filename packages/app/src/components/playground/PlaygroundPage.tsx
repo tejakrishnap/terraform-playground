@@ -5,21 +5,15 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { makeStyles } from '@material-ui/core/styles';
 import { LeftSidebar } from './LeftSidebar';
 import { Canvas } from './Canvas';
-import { RightSidebar } from './RightSidebar';
 import {
   Box,
-  Button,
-  Chip,
-  Container,
-  Divider,
-  Drawer,
 } from '@material-ui/core';
-import { CopyToClipboardButton } from './CopyToClipboard';
 import axios from 'axios';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import { theme } from '../Root/Root';
 import { RoundedButton } from './CreatePlayground';
 import EditIcon from '@mui/icons-material/Edit';
+import Stepper from './Stepper';
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -51,6 +45,26 @@ export const PlaygroundPage = () => {
   });
   const [playgroundName, setPlaygroundName] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const steps = ['1. Generate', '2. Plan', '3. Apply', '4. Push to Gitlab'];
+
+  const clickHandlers = [
+    async () => {
+      // await axios.get('/api/generate');
+      alert('Generate step completed');
+    },
+    async () => {
+      // await axios.get('/api/plan');
+      alert('Plan step completed');
+    },
+    async () => {
+      // await axios.get('/api/apply');
+      alert('Apply step completed');
+    },
+    async () => {
+      // await axios.get('/api/push-to-gitlab');
+      alert('Push to Gitlab step completed');
+    }
+  ];
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -153,6 +167,7 @@ export const PlaygroundPage = () => {
           {/* <div className={classes.sidebar}>
             <RightSidebar />
           </div> */}
+          <Box zIndex={2} position={'absolute'} bottom={10} left={'30%'}><Stepper steps={steps} clickHandlers={clickHandlers} /></Box>
           <Box position="fixed" bottom={72} right={16} zIndex={2}>
             <RoundedButton
               variant="contained"
@@ -178,7 +193,7 @@ export const PlaygroundPage = () => {
         </div>
       </DndProvider>
 
-      <Drawer anchor={'bottom'} open={drawerOpen} onClose={toggleDrawer}>
+      {/* <Drawer anchor={'bottom'} open={drawerOpen} onClose={toggleDrawer}>
         <Container style={{ maxWidth: '800px', padding: '10px 0 10px 0' }}>
           <CopyToClipboardButton
             label="Webhook"
@@ -193,7 +208,8 @@ export const PlaygroundPage = () => {
             textToCopy={playgroundData.accessKey}
           />
         </Container>
-      </Drawer>
+      </Drawer> */}
+      
     </>
   );
 };

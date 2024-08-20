@@ -91,6 +91,44 @@ export const theme = createTheme({
         },
       },
     },
+    MuiInputBase: {
+      styleOverrides: {
+        root: {
+          '&::before': {
+            borderBottom: '1px solid #f5f3ed',
+          },
+        },
+        input: {
+          color: '#f5f3ed',
+          fontWeight: 700,
+        },
+      },
+    },
+    MuiFormLabel: {
+      styleOverrides: {
+        root: {
+          color: '#f5f3ed',
+          fontSize: '14px',
+        },
+      },
+    },
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          color: '#FFB130',
+          fontWeight: 500,
+          fontSize: '10px',
+        },
+      },
+    },
+    // Override styles for svg if needed
+    MuiSvgIcon: {
+      styleOverrides: {
+        root: {
+          backgroundColor: 'transparent',
+        },
+      },
+    },
   },
 });
 

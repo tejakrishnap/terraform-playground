@@ -21,6 +21,8 @@ const Stepper = ({ steps, clickHandlers }) => {
     //     alert('Push to Gitlab step completed');
     //   }
     // ];
+
+    // <Stepper steps={steps} clickHandlers={clickHandlers} />
   const [currentStep, setCurrentStep] = useState(0);
 
   const handleButtonClick = async (index) => {
