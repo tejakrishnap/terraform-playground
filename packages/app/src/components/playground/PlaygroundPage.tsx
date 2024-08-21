@@ -12,7 +12,7 @@ import axios from 'axios';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import { theme } from '../Root/Root';
 import { RoundedButton } from './CreatePlayground';
-import EditIcon from '@mui/icons-material/Edit';
+import ExtensionIcon from '@mui/icons-material/Extension';
 import Stepper from './Stepper';
 
 const useStyles = makeStyles(theme => ({
@@ -28,7 +28,6 @@ const useStyles = makeStyles(theme => ({
   canvas: {
     flex: 1,
     backgroundColor: theme.palette.primary.main,
-    // borderLeft: `1px solid ${theme.palette.orangePeel.main}`,
   },
 }));
 
@@ -45,7 +44,7 @@ export const PlaygroundPage = () => {
   });
   const [playgroundName, setPlaygroundName] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const steps = ['1. Generate', '2. Plan', '3. Apply', '4. Push to Gitlab'];
+  const steps = ['1. Generate', '2. Plan', '3. Push to Gitlab'];
 
   const clickHandlers = [
     async () => {
@@ -57,10 +56,6 @@ export const PlaygroundPage = () => {
       alert('Plan step completed');
     },
     async () => {
-      // await axios.get('/api/apply');
-      alert('Apply step completed');
-    },
-    async () => {
       // await axios.get('/api/push-to-gitlab');
       alert('Push to Gitlab step completed');
     }
@@ -69,7 +64,7 @@ export const PlaygroundPage = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const name = params.get('name');
-    setPlaygroundName(name);
+    setPlaygroundName(name as string);
 
     if (name) {
       axios
@@ -111,20 +106,6 @@ export const PlaygroundPage = () => {
     }
   };
 
-  const toggleDrawer = () => {
-    () => (event: React.KeyboardEvent | React.MouseEvent) => {
-      if (
-        event.type === 'keydown' &&
-        ((event as React.KeyboardEvent).key === 'Tab' ||
-          (event as React.KeyboardEvent).key === 'Shift')
-      ) {
-        return;
-      }
-    };
-
-    setDrawerOpen(prev => !prev);
-  };
-
   return (
     <>
       <DndProvider backend={HTML5Backend}>
@@ -142,7 +123,7 @@ export const PlaygroundPage = () => {
                 gap: 4,
               }}
             >
-              <EditIcon
+              <ExtensionIcon
                 sx={{ color: theme.palette.greentheme.green, fontSize: 20 }}
               />
               <Box
@@ -156,27 +137,9 @@ export const PlaygroundPage = () => {
                 {playgroundName} playground
               </Box>
             </Box>
-            {/* <h2
-              style={{ marginLeft: '8px', textAlign: 'center', color: theme.palette.greentheme.green, }}
-            >
-              // {playgroundName} playground
-            </h2> */}
-            {/* <Divider style={{ backgroundColor: theme.palette.orangePeel.main }} /> */}
             <Canvas items={items} setItems={setItems} />
           </div>
-          {/* <div className={classes.sidebar}>
-            <RightSidebar />
-          </div> */}
-          <Box zIndex={2} position={'absolute'} bottom={10} left={'30%'}><Stepper steps={steps} clickHandlers={clickHandlers} /></Box>
-          <Box position="fixed" bottom={72} right={16} zIndex={2}>
-            <RoundedButton
-              variant="contained"
-              color="secondary"
-              onClick={toggleDrawer}
-            >
-              Playground data
-            </RoundedButton>
-          </Box>
+          <Box zIndex={2} position={'absolute'} bottom={10} left={'48%'}><Stepper steps={steps} clickHandlers={clickHandlers} /></Box>
           <Box position="fixed" bottom={16} right={16} zIndex={2}>
             <RoundedButton
               variant="contained"
@@ -192,24 +155,6 @@ export const PlaygroundPage = () => {
           </Box>
         </div>
       </DndProvider>
-
-      {/* <Drawer anchor={'bottom'} open={drawerOpen} onClose={toggleDrawer}>
-        <Container style={{ maxWidth: '800px', padding: '10px 0 10px 0' }}>
-          <CopyToClipboardButton
-            label="Webhook"
-            textToCopy={playgroundData.webhook}
-          />
-          <CopyToClipboardButton
-            label="Backend"
-            textToCopy={playgroundData.backend}
-          />
-          <CopyToClipboardButton
-            label="Access Key"
-            textToCopy={playgroundData.accessKey}
-          />
-        </Container>
-      </Drawer> */}
-      
     </>
   );
 };

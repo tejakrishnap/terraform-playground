@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Divider, Paper } from '@material-ui/core';
+import { Box, Paper } from '@material-ui/core';
 import { ReactSVG } from 'react-svg';
 import { useDrag } from 'react-dnd';
 import { theme } from '../Root/Root';
@@ -47,7 +47,7 @@ const ToolItem: React.FC<ToolItemProps> = ({ id, name, svgSrc }) => {
   );
 };
 
-const ResourcePalette = ({ resources }) => {
+const ResourcePalette = ({ resources }: {resources: ToolItemProps[]}) => {
   return (
     <Paper
       elevation={3}
@@ -55,7 +55,7 @@ const ResourcePalette = ({ resources }) => {
         marginLeft: '10px',
         backgroundColor: theme.palette.greentheme.green,
         borderRadius: 8,
-        height: '100vh',
+        height: '96vh',
       }}
     >
       <h2

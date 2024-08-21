@@ -41,6 +41,7 @@
     "@material-ui/core": "^4.12.2",
     "@material-ui/icons": "^4.9.1",
     "@mui/icons-material": "^5.16.6",
+    "@xyflow/react": "^12.1.1",
     "file-saver": "^2.0.5",
     "history": "^5.0.0",
     "react": "^18.0.2",

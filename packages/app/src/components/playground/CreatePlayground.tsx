@@ -20,9 +20,6 @@ export const RoundedButton = styled(Button)(() => ({
 
 export const CreatePlaygroundPage = () => {
   const [playgroundName, setPlaygroundName] = useState('');
-  const [webhook, setWebhook] = useState('');
-  const [backend, setBackend] = useState('');
-  const [accessKey, setAccessKey] = useState('');
   const configApi = useApi(configApiRef);
   const backendBaseUrl = configApi.getString('backend.baseUrl');
   const navigate = useNavigate();
@@ -35,10 +32,7 @@ export const CreatePlaygroundPage = () => {
 
     const newPlayground = {
       name: playgroundName,
-      items: [],
-      webhook,
-      backend,
-      accessKey,
+      items: []
     };
 
     try {
@@ -97,27 +91,6 @@ export const CreatePlaygroundPage = () => {
             color="primary"
             InputLabelProps={{ className: 'textfield__label' }}
           />
-          {/* <TextField
-            label="Gitlab Integration Webhook"
-            value={webhook}
-            onChange={e => setWebhook(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            label="Terraform Backend"
-            value={backend}
-            onChange={e => setBackend(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-          <TextField
-            label="Access Key"
-            value={accessKey}
-            onChange={e => setAccessKey(e.target.value)}
-            fullWidth
-            margin="normal"
-          /> */}
           <RoundedButton
             variant="contained"
             color="primary"

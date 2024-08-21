@@ -1,7 +1,6 @@
 import React, { PropsWithChildren } from 'react';
 import {
   createTheme,
-  InputLabel,
   makeStyles,
   ThemeProvider,
 } from '@material-ui/core';
@@ -33,6 +32,33 @@ import SearchIcon from '@material-ui/icons/Search';
 import { MyGroupsSidebarItem } from '@backstage/plugin-org';
 import GroupIcon from '@material-ui/icons/People';
 import SportsEsportsIcon from '@material-ui/icons/SportsEsports';
+
+declare module '@material-ui/core/styles/createPalette' {
+  interface Palette {
+    orangePeel: {
+      main: string;
+      dark: string;
+    };
+    greentheme: {
+      offwhite: string;
+      green: string;
+      orangePeel: string;
+      yellow: string;
+    };
+  }
+  interface PaletteOptions {
+    orangePeel?: {
+      main: string;
+      dark: string;
+    };
+    greentheme?: {
+      offwhite: string;
+      green: string;
+      orangePeel: string;
+      yellow: string;
+    };
+  }
+}
 
 const useSidebarLogoStyles = makeStyles({
   root: {
@@ -71,62 +97,52 @@ export const theme = createTheme({
   typography: {
     fontFamily: 'Montserrat',
   },
-  components: {
+  overrides: {
     MuiInput: {
-      styleOverrides: {
-        root: {
-          color: '#F5F3ED !important',
-          '&:before': {
-            borderBottomColor: '#F5F3ED !important', // Default bottom border color
-          },
-          '&:after': {
-            borderBottomColor: '#F5F3ED !important', // Bottom border color when focused
-          },
-          '&:hover:not(.Mui-disabled):before': {
-            borderBottomColor: '#F5F3ED !important', // Bottom border color on hover
-          },
-          '& input': {
-            color: '#F5F3ED !important', // Input text color
-          },
+      root: {
+        color: '#F5F3ED !important',
+        '&:before': {
+          borderBottomColor: '#F5F3ED !important', // Default bottom border color
+        },
+        '&:after': {
+          borderBottomColor: '#F5F3ED !important', // Bottom border color when focused
+        },
+        '&:hover:not(.Mui-disabled):before': {
+          borderBottomColor: '#F5F3ED !important', // Bottom border color on hover
+        },
+        '& input': {
+          color: '#F5F3ED !important', // Input text color
         },
       },
     },
     MuiInputBase: {
-      styleOverrides: {
-        root: {
-          '&::before': {
-            borderBottom: '1px solid #f5f3ed',
-          },
+      root: {
+        '&::before': {
+          borderBottom: '1px solid #f5f3ed',
         },
-        input: {
-          color: '#f5f3ed',
-          fontWeight: 700,
-        },
+      },
+      input: {
+        color: '#f5f3ed',
+        fontWeight: 700,
       },
     },
     MuiFormLabel: {
-      styleOverrides: {
-        root: {
-          color: '#f5f3ed',
-          fontSize: '14px',
-        },
+      root: {
+        color: '#f5f3ed',
+        fontSize: '14px',
       },
     },
     MuiFormHelperText: {
-      styleOverrides: {
-        root: {
-          color: '#FFB130',
-          fontWeight: 500,
-          fontSize: '10px',
-        },
+      root: {
+        color: '#FFB130',
+        fontWeight: 500,
+        fontSize: '10px',
       },
     },
     // Override styles for svg if needed
     MuiSvgIcon: {
-      styleOverrides: {
-        root: {
-          backgroundColor: 'transparent',
-        },
+      root: {
+        backgroundColor: 'transparent',
       },
     },
   },

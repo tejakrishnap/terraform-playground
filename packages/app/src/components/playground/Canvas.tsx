@@ -1,25 +1,46 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, SetStateAction, Dispatch } from 'react';
 import { useDrop } from 'react-dnd';
 import { ReactSVG } from 'react-svg';
 import HighlightOffIcon from '@material-ui/icons/HighlightOffSharp';
 import { Box, Button, Chip, Modal, TextField } from '@material-ui/core';
 import { theme } from '../Root/Root';
-import ReactFlow, {
+import {
+  ReactFlow,
   addEdge,
   Background,
   Controls,
   Handle,
   useEdgesState,
   useNodesState,
-} from 'react-flow-renderer';
+  Position,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import axios from 'axios';
+import CustomEdge from './CustomEdge';
+
+interface CustomNodeProps {
+  id: string;
+  data: {
+    label: string,
+    onRemove: () => {},
+    onOpen: () => (newItem: any) => {},
+    handleRemoveItem: () => {},
+  };
+  handleRemoveItem: (id: string) => {}
+}
+
+interface CanvasProps {
+  items: any[],
+  setItems: Dispatch<SetStateAction<never[]>
+}
+
 
 const ItemType = {
   TOOL: 'tool',
 };
 
-const iconMapping = {
+const iconMapping: {[key: string]: string} = {
   'ECS-Cluster': 'icons/ECS-Cluster.svg',
   'ECS-Service': 'icons/ECS-Service.svg',
   'ECS-Task-Definition': 'icons/ECS-Task-Definition.svg',
@@ -28,7 +49,7 @@ const iconMapping = {
   'Application-Load-Balancer': 'icons/Application-Load-Balancer.svg',
 };
 
-const CustomNode = ({ id, data, handleRemoveItem }) => {
+const CustomNode = ({ id, data, handleRemoveItem }: CustomNodeProps) => {
   const handleRemoveNode = () => {
     handleRemoveItem(id);
   };
@@ -62,18 +83,17 @@ const CustomNode = ({ id, data, handleRemoveItem }) => {
         onDoubleClick={data.onOpen}
         title={data.label}
       />
-      <Handle type="source" position="right" id="source" />
-      <Handle type="target" position="left" id="target" />
+      <Handle type="source" position={Position.Right} id="source" />
+      <Handle type="target" position={Position.Left} id="target" />
     </div>
   );
 };
 
-// Define nodeTypes outside the component to avoid recreation on every render
 const nodeTypes = {
-  custom: (props) => <CustomNode {...props} handleRemoveItem={props.data.handleRemoveItem} />,
+  custom: (props: React.JSX.IntrinsicAttributes & CustomNodeProps) => <CustomNode {...props} handleRemoveItem={props.data.handleRemoveItem} />,
 };
 
-export const Canvas = ({ items, setItems }) => {
+export const Canvas = ({ items, setItems }: CanvasProps) => {
   const [open, setOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [inputValues, setInputValues] = useState({});
@@ -84,6 +104,10 @@ export const Canvas = ({ items, setItems }) => {
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  const edgeTypes = {
+    'custom-edge': CustomEdge,
+  };
 
   useEffect(() => {
     const newNodes = items.map(item => ({
@@ -98,17 +122,19 @@ export const Canvas = ({ items, setItems }) => {
       type: 'custom',
     }));
   
-    setNodes(newNodes);
+    setNodes(newNodes as any);
   
-    const newEdges = items.flatMap(item =>
+    const newEdges = items.flatMap((item: any) =>
       (item.connections || [])
-        .filter(conn => conn.target !== item.id)
-        .map(conn => ({
+        .filter((conn: { target: string; }) => conn.target !== item.id)
+        .map((conn: { target: string; }) => ({
           id: `${item.id}-${conn.target}`,
+          type: 'custom-edge',
           source: item.id,
           target: conn.target,
           sourceHandle: 'source',
           targetHandle: 'target',
+          animated: true
         }))
     );
 
@@ -119,7 +145,7 @@ export const Canvas = ({ items, setItems }) => {
 
   const handleConnect = useCallback(
     (params) => {
-      setEdges((eds) => addEdge({ ...params, sourceHandle: 'source', targetHandle: 'target' }, eds));
+      setEdges((eds) => addEdge({ ...params, sourceHandle: 'source', targetHandle: 'target', animated: true, type: 'custom-edge' }, eds));
       
       const { source, target } = params;
       setItems((items) => 
@@ -276,11 +302,11 @@ export const Canvas = ({ items, setItems }) => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeDragStop={handleNodeDragStop}
-        fitView
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
       >
         <Background />
-        <Controls />
+        <Controls style={{position: 'absolute', bottom: '40px'}}/>
       </ReactFlow>
       <Modal open={open} onClose={handleClose} style={{ outline: 'none' }}>
       <Box

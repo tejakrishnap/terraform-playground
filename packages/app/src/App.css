@@ -25,3 +25,7 @@ body {
 svg {
   background-color: transparent !important;
 }
+
+.react-flow__attribution {
+  display: none;
+}
