@@ -43,7 +43,6 @@ export const PlaygroundPage = () => {
     accessKey: '',
   });
   const [playgroundName, setPlaygroundName] = useState('');
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const steps = ['1. Generate', '2. Plan', '3. Push to Gitlab'];
 
   const clickHandlers = [

@@ -145,6 +145,53 @@ export const theme = createTheme({
         backgroundColor: 'transparent',
       },
     },
+    MuiRadio: {
+      root: {
+        color: '#FFB130', // Default color
+        '&$checked': {
+          color: '#FFB130 !important', // Color when checked
+        },
+      },
+    },
+    MuiSelect: {
+      root: {
+        color: '#F5F3ED', // Text color
+        '& .MuiSelect-icon': {
+          color: '#FFB130', // Arrow icon color
+        },
+      },
+      icon: {
+        color: '#F5F3ED', // Icon color for the dropdown arrow
+      },
+      select: {
+        '&:focus': {
+          backgroundColor: 'transparent', // Removes background on focus
+        },
+      },
+    },
+    MuiMenuItem: {
+      root: {
+        color: '#1B4F4A', // Text color in dropdown
+        '&:hover': {
+          backgroundColor: '#1B4F4A', // Background color on hover
+          color: '#F5F3ED', // Text color on hover
+        },
+        '&.Mui-selected': {
+          backgroundColor: '#1B4F4A', // Background color when selected
+          color: '#F5F3ED', // Text color when selected
+        },
+        '&.Mui-selected:hover': {
+          backgroundColor: '#1B4F4A', // Background color when selected
+          color: '#F5F3ED', // Text color on hover when selected
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      root: {
+        border: '1px solid #F5F3ED',
+      }
+      
+    }
   },
 });
 

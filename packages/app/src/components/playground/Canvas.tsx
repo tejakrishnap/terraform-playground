@@ -4,10 +4,9 @@ import React, {
   useEffect,
   SetStateAction,
   Dispatch,
+  useRef,
 } from 'react';
 import { useDrop } from 'react-dnd';
-import { ReactSVG } from 'react-svg';
-import HighlightOffIcon from '@material-ui/icons/HighlightOffSharp';
 import { Box, Button, Chip, Modal, TextField } from '@material-ui/core';
 import { theme } from '../Root/Root';
 import {
@@ -15,15 +14,17 @@ import {
   addEdge,
   Background,
   Controls,
-  Handle,
   useEdgesState,
   useNodesState,
-  Position,
+  Edge,
+  Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import axios from 'axios';
 import CustomEdge from './CustomEdge';
+import { MappingModal } from './MappingModal';
+import CustomNode from './CustomNode';
 
 interface CustomNodeProps {
   id: string;
@@ -45,55 +46,6 @@ const ItemType = {
   TOOL: 'tool',
 };
 
-const iconMapping: { [key: string]: string } = {
-  'ECS-Cluster': 'icons/ECS-Cluster.svg',
-  'ECS-Service': 'icons/ECS-Service.svg',
-  'ECS-Task-Definition': 'icons/ECS-Task-Definition.svg',
-  RDS: 'icons/RDS.svg',
-  'Security-Group': 'icons/Security-Group.svg',
-  'Application-Load-Balancer': 'icons/Application-Load-Balancer.svg',
-};
-
-const CustomNode = ({ id, data, handleRemoveItem }: CustomNodeProps) => {
-  const handleRemoveNode = () => {
-    handleRemoveItem(id);
-  };
-
-  return (
-    <div
-      style={{
-        position: 'relative',
-        width: '48px',
-        height: '48px',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-    >
-      <HighlightOffIcon
-        onClick={handleRemoveNode}
-        style={{
-          position: 'absolute',
-          left: '44px',
-          top: '-10px',
-          color: '#27ae60',
-          width: '12px',
-          height: '12px',
-          cursor: 'pointer',
-        }}
-      />
-      <ReactSVG
-        src={iconMapping[data.label]}
-        style={{ width: '38px', height: '38px', cursor: 'pointer' }}
-        onDoubleClick={data.onOpen}
-        title={data.label}
-      />
-      <Handle type="source" position={Position.Right} id="source" />
-      <Handle type="target" position={Position.Left} id="target" />
-    </div>
-  );
-};
-
 const nodeTypes = {
   custom: (props: React.JSX.IntrinsicAttributes & CustomNodeProps) => (
     <CustomNode {...props} handleRemoveItem={props.data.handleRemoveItem} />
@@ -113,6 +65,9 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
     sourceName: '',
     targetName: '',
   });
+  const [sourceOutputs, setSourceOutputs] = useState<any[]>([]);
+  const [targetInputs, setTargetInputs] = useState<any[]>([]);
+  const dropContainerRef = useRef(null);
   const configApi = useApi(configApiRef);
   const backendBaseUrl = configApi.getString('backend.baseUrl');
 
@@ -121,6 +76,47 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
 
   const edgeTypes = {
     'custom-edge': CustomEdge,
+  };
+
+  const fetchVariableData = async item => {
+    try {
+      const response = await axios.post(
+        `${backendBaseUrl}/api/terraform-backend-api/get-variable-data`,
+        { serviceKey: item.name },
+      );
+      const data = response.data;
+
+      if (response.status === 200) {
+        return data;
+      } else {
+        setError(data.message);
+        return { inputs: {}, outputs: {} };
+      }
+    } catch (error) {
+      console.error('Error fetching variable data:', error);
+      setError('Failed to fetch variable data');
+      return { inputs: {}, outputs: {} };
+    }
+  };
+
+  const handleMappingSave = (mappings) => {
+    // Update the items state with the selected mappings
+    const updatedItems = items.map(item => {
+      // Check if the item is the target of the mapping
+      if (item.id === connectionInfo.target) {
+        const updatedInputs = { ...item.inputs };
+        Object.keys(mappings).forEach(outputKey => {
+          const mappedInput = mappings[outputKey];
+          if (mappedInput) {
+            updatedInputs[outputKey] = mappedInput;
+          }
+        });
+        return { ...item, inputs: updatedInputs };
+      }
+      return item;
+    });
+
+    setItems(updatedItems);
   };
 
   useEffect(() => {
@@ -159,6 +155,14 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
     setEdges(distinctEdges);
   }, [items, setNodes, setEdges]);
 
+  useEffect(() => {
+    console.log('Source Outputs Updated:', sourceOutputs);
+  }, [sourceOutputs]);
+
+  useEffect(() => {
+    console.log('Target Inputs Updated:', targetInputs);
+  }, [targetInputs]);
+
   const handleConnect = useCallback(
     params => {
       setEdges(eds =>
@@ -194,7 +198,7 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
   const findItem = (itemId: string) => items.find(item => item.id === itemId);
 
   const onConnect = useCallback(
-    params => {
+    async (params: Edge | Connection) => {
       handleConnect(params);
 
       const sourceItem = findItem(params.source);
@@ -207,6 +211,20 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
           sourceName: sourceItem.name.replace(/-/g, ' '),
           targetName: targetItem.name.replace(/-/g, ' '),
         });
+
+        setSourceOutputs(
+          Object.entries(sourceItem.outputs || {}).map(([key, value]) => ({
+            key,
+            ...value,
+          })),
+        );
+        setTargetInputs(
+          Object.entries(targetItem.inputs || {}).map(([key, value]) => ({
+            key,
+            ...value,
+          })),
+        );
+
         setConnectModalOpen(true);
       } else {
         console.warn('Source or target item not found in items array.');
@@ -215,31 +233,26 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
     [handleConnect, findItem],
   );
 
-  const handleOpen = async item => {
+  const handleOpen = item => {
     setSelectedItem(item);
-    setInputValues(item.data || {});
+    const existingItem = items.find(i => i.id === item.id);
+    const initializedInputValues = Object.keys(item.inputs || {}).reduce(
+      (acc, key) => {
+        if (
+          typeof existingItem?.inputs?.[key] === 'object' &&
+          !Array.isArray(existingItem.inputs[key])
+        ) {
+          acc[key] = '';
+        } else {
+          acc[key] = existingItem?.inputs?.[key] || '';
+        }
+        return acc;
+      },
+      {},
+    );
 
-    try {
-      const response = await axios.post(
-        `${backendBaseUrl}/api/terraform-backend-api/get-variable-data`,
-        {
-          serviceKey: item.name,
-        },
-      );
-      const data = response.data;
-
-      if (response.status === 200) {
-        setVariableData(data);
-      } else {
-        setError(data.message);
-        setVariableData({ inputs: {}, outputs: {} });
-      }
-    } catch (error) {
-      console.error('Error fetching variable data:', error);
-      setError('Failed to fetch variable data');
-      setVariableData({ inputs: {}, outputs: {} });
-    }
-
+    setInputValues(initializedInputValues);
+    setVariableData({ inputs: item.inputs || {}, outputs: item.outputs || {} });
     setOpen(true);
   };
 
@@ -256,23 +269,27 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
   const handleSave = async () => {
     const updatedItems = items.map(item => {
       if (item.id === selectedItem.id) {
-        return { ...item, data: inputValues };
+        return { ...item, inputs: inputValues };
       }
       return item;
     });
 
     setItems(updatedItems);
     handleClose();
-    setConnectionInfo(null);
   };
 
-  const [{ isOver }, drop] = useDrop({
+  const [, drop] = useDrop({
     accept: ItemType.TOOL,
-    drop: (item, monitor) => {
-      const offset = monitor.getClientOffset();
+    drop: async (item, monitor) => {
+      const offset = monitor.getSourceClientOffset();
+
+      if (!offset || !dropContainerRef.current) return;
+
+      const dropRect = dropContainerRef.current.getBoundingClientRect();
+
       const newPosition = {
-        x: offset.x - monitor.getInitialClientOffset().x,
-        y: offset.y - monitor.getInitialClientOffset().y,
+        x: offset.x - dropRect.left,
+        y: offset.y - dropRect.top,
       };
 
       const newItem = {
@@ -282,7 +299,12 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
       };
 
       if (!items.some(existingItem => existingItem.id === newItem.id)) {
-        const newItems = [...items, newItem];
+        const data = await fetchVariableData(newItem);
+
+        const newItems = [
+          ...items,
+          { ...newItem, inputs: data.inputs, outputs: data.outputs },
+        ];
         setItems(newItems);
 
         const newNode = {
@@ -318,10 +340,7 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
   };
 
   const toCapitalCase = name => {
-    return name
-      .replace(/_/g, ' ')
-      .toLowerCase()
-      .replace(/\b\w/g, char => char.toUpperCase());
+    return name.replace(/_/g, ' ').replace(/(?:^|\s)\S/g, a => a.toUpperCase());
   };
 
   const handleNodeDragStop = (event, node) => {
@@ -334,9 +353,18 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
     setItems(updatedItems);
   };
 
+  // Combine refs into a single ref callback
+  const combinedRef = useCallback(
+    node => {
+      drop(node); // Pass the node to drop
+      dropContainerRef.current = node; // Set the dropContainerRef
+    },
+    [drop],
+  );
+
   return (
     <div
-      ref={drop}
+      ref={combinedRef}
       style={{
         position: 'relative',
         width: '100%',
@@ -358,6 +386,15 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
         <Background />
         <Controls style={{ position: 'absolute', bottom: '40px' }} />
       </ReactFlow>
+
+      <MappingModal
+        open={connectModalOpen}
+        onClose={() => setConnectModalOpen(false)}
+        sourceOutputs={sourceOutputs}
+        targetInputs={targetInputs}
+        connectionInfo={connectionInfo}
+        onSave={handleMappingSave}
+      />
       <Modal open={open} onClose={handleClose} style={{ outline: 'none' }}>
         <Box
           sx={{
@@ -385,14 +422,19 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
           >
             Inputs
           </h3>
-          {Object.entries(variableData?.inputs || {}).map(([key, value]) => (
+
+          {Object.entries(variableData.inputs || {}).map(([key, value]) => (
             <TextField
               key={key}
               label={toCapitalCase(key)}
               helperText={value.description || ''}
               type={value.type === 'number' ? 'number' : 'text'}
               defaultValue={value.default || ''}
-              value={inputValues[key] || ''}
+              value={
+                typeof inputValues[key] === 'object'
+                  ? JSON.stringify(inputValues[key])
+                  : inputValues[key] || ''
+              }
               onChange={e => handleInputChange(key, e.target.value)}
               fullWidth
               margin="normal"
@@ -428,45 +470,6 @@ export const Canvas = ({ items, setItems }: CanvasProps) => {
               style={{ marginTop: 16, marginLeft: 8 }}
             >
               Cancel
-            </Button>
-          </Box>
-        </Box>
-      </Modal>
-      <Modal
-        open={connectModalOpen}
-        onClose={() => setConnectModalOpen(false)}
-        style={{ outline: 'none' }}
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 600,
-            bgcolor: 'greentheme.green',
-            p: 4,
-            outline: 'none',
-            borderRadius: 16,
-          }}
-        >
-          <h2 style={{ color: theme.palette.greentheme.offwhite }}>
-            You are connecting {connectionInfo.sourceName} to{' '}
-            {connectionInfo.targetName}
-          </h2>
-          {/* <p style={{ color: theme.palette.greentheme.offwhite }}>
-            <strong>{connectionInfo.source}</strong> to{' '}
-            <strong>{connectionInfo.target}</strong>.
-          </p> */}
-          {/* Add any additional inputs or information you want here */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Button
-              onClick={() => setConnectModalOpen(false)}
-              variant="contained"
-              color="primary"
-              style={{ marginTop: 16 }}
-            >
-              Close
             </Button>
           </Box>
         </Box>
